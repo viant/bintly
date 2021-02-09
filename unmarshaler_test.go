@@ -14,7 +14,7 @@ type Employee struct {
 	DeptIDs  []int
 }
 
-func Example_Marshal() {
+func Example_Unmarshal() {
 	emp := Employee{
 		ID:       100,
 		Name:     "test",

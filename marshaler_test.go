@@ -32,6 +32,7 @@ var b1 = &benchStruct{
 	A8: uint8Slice,
 }
 
+//DecodeBinary decode bindly stream
 func (m *benchStruct) DecodeBinary(stream *Reader) error {
 	stream.Int(&m.A1)
 	stream.String(&m.A2)
@@ -44,6 +45,7 @@ func (m *benchStruct) DecodeBinary(stream *Reader) error {
 	return nil
 }
 
+//EncodeBinary encodes bintly stream
 func (m *benchStruct) EncodeBinary(stream *Writer) error {
 	stream.Int(m.A1)
 	stream.String(m.A2)
@@ -56,6 +58,7 @@ func (m *benchStruct) EncodeBinary(stream *Writer) error {
 	return nil
 }
 
+//ToBytes converts to bytes with wrapped encoding/binary ByteOrder
 func (m *benchStruct) ToBytes() ([]byte, error) {
 	writer := bin.NewWriter(binary.LittleEndian)
 	if err := writer.Int(m.A1); err != nil {
@@ -85,6 +88,7 @@ func (m *benchStruct) ToBytes() ([]byte, error) {
 	return writer.ToBytes(), nil
 }
 
+//ToBytes converts from bytes with wrapped encoding/binary ByteOrder
 func (m *benchStruct) FromBytes(bs []byte) {
 	reader := bin.NewReader(bs, binary.LittleEndian)
 	m.A1 = reader.Int()
