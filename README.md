@@ -116,18 +116,18 @@ func (e *Employee) EncodeBinary(stream *bintly.Writer) error {
 Benchmark uses [BenchStruct](marshaler_test.go#L10)  where slices got populated with 80 random items.
 
 ```bash
-BenchmarkUnmarshal
-BenchmarkUnmarshal-16          	  968355	      1401 ns/op	    3762 B/op	       6 allocs/op
-BenchmarkMarshal
-BenchmarkMarshal-16            	 1298409	       910 ns/op	    2305 B/op	       1 allocs/op
+BenchmarkUnmarshalBintly
+BenchmarkUnmarshalBintly-16    	  872896	      1434 ns/op	    3762 B/op	       6 allocs/op
+BenchmarkMarshalBintly
+BenchmarkMarshalBintly-16      	 1000000	      1049 ns/op	    2305 B/op	       1 allocs/op
 BenchmarkUnmarshalBinary
-BenchmarkUnmarshalBinary-16    	  389329	      3109 ns/op	    3072 B/op	      75 allocs/op
+BenchmarkUnmarshalBinary-16    	  315751	      3246 ns/op	    3152 B/op	      79 allocs/op
 BenchmarkMarshalBinary
-BenchmarkMarshalBinary-16      	  214452	      5091 ns/op	    4536 B/op	       7 allocs/op
+BenchmarkMarshalBinary-16      	  234904	      5053 ns/op	    4536 B/op	       7 allocs/op
 BenchmarkJSONUnmarshal
-BenchmarkJSONUnmarshal-16      	   18811	     62546 ns/op	   15584 B/op	     313 allocs/op
+BenchmarkJSONUnmarshal-16      	   19051	     61436 ns/op	   15456 B/op	     314 allocs/op
 BenchmarkJSONMarshal
-BenchmarkJSONMarshal-16        	   61567	     18845 ns/op	    4210 B/op	       2 allocs/op
+BenchmarkJSONMarshal-16        	   58828	     21484 ns/op	    4210 B/op	       2 allocs/op
 ```
 
 

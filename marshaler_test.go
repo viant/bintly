@@ -109,7 +109,7 @@ func Test_BenchStruct(t *testing.T) {
 	assert.EqualValues(t, b2, b1)
 }
 
-func BenchmarkUnmarshal(b *testing.B) {
+func BenchmarkUnmarshalBintly(b *testing.B) {
 	data, err := Marshal(b1)
 	assert.Nil(b, err)
 	b.ResetTimer()
@@ -123,7 +123,7 @@ func BenchmarkUnmarshal(b *testing.B) {
 	}
 }
 
-func BenchmarkMarshal(b *testing.B) {
+func BenchmarkMarshalBintly(b *testing.B) {
 	b.ReportAllocs()
 	for i := 0; i < b.N; i++ {
 		_, _ = Marshal(b1)
