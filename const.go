@@ -1,8 +1,11 @@
 package bintly
 
+import "math/bits"
+
 const (
-	size64bits = 8
-	size32bits = 4
-	size16bits = 2
-	size8bits  = 1
+	sizeIntInBytes    = bits.UintSize/8
+	size64bitsInBytes = 8
+	size32bitsInBytes = 4
+	size16bitsInBytes = 2
+	size8bitsInBytes  = 1
 )

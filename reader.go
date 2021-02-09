@@ -602,12 +602,12 @@ func (s *decInts) load(data []byte, offset int) int {
 	if data[offset] != codecInts {
 		return offset
 	}
-	offset += size8bits
+	offset += size8bitsInBytes
 	size := int(Uint32(data[offset:]))
-	offset += size32bits
+	offset += size32bitsInBytes
 	*s = make([]int, size)
 	GetInts(data[offset:], *s)
-	offset += size64bits * size
+	offset += sizeIntInBytes * size
 	return offset
 }
 
@@ -615,12 +615,12 @@ func (s *decUints) load(data []byte, offset int) int {
 	if data[offset] != codecUints {
 		return offset
 	}
-	offset += size8bits
+	offset += size8bitsInBytes
 	size := int(Uint32(data[offset:]))
-	offset += size32bits
+	offset += size32bitsInBytes
 	*s = make([]uint, size)
 	GetUints(data[offset:], *s)
-	offset += size64bits * size
+	offset += sizeIntInBytes * size
 	return offset
 }
 
@@ -628,12 +628,12 @@ func (s *decInt64s) load(data []byte, offset int) int {
 	if data[offset] != codecInt64s {
 		return offset
 	}
-	offset += size8bits
+	offset += size8bitsInBytes
 	size := int(Int32(data[offset:]))
-	offset += size32bits
+	offset += size32bitsInBytes
 	*s = make([]int64, size)
 	GetInt64s(data[offset:], *s)
-	offset += size64bits * size
+	offset += size64bitsInBytes * size
 	return offset
 }
 
@@ -641,12 +641,12 @@ func (s *decUint64s) load(data []byte, offset int) int {
 	if data[offset] != codecUint64s {
 		return offset
 	}
-	offset += size8bits
+	offset += size8bitsInBytes
 	size := int(Uint32(data[offset:]))
-	offset += size32bits
+	offset += size32bitsInBytes
 	*s = make([]uint64, size)
 	GetUint64s(data[offset:], *s)
-	offset += size64bits * size
+	offset += size64bitsInBytes * size
 	return offset
 }
 
@@ -654,12 +654,12 @@ func (s *decInt32s) load(data []byte, offset int) int {
 	if data[offset] != codecInt32s {
 		return offset
 	}
-	offset += size8bits
+	offset += size8bitsInBytes
 	size := int(Uint32(data[offset:]))
-	offset += size32bits
+	offset += size32bitsInBytes
 	*s = make([]int32, size)
 	GetInt32s(data[offset:], *s)
-	offset += size32bits * size
+	offset += size32bitsInBytes * size
 	return offset
 }
 
@@ -667,12 +667,12 @@ func (s *decUint32s) load(data []byte, offset int, codec uint8) int {
 	if data[offset] != codec {
 		return offset
 	}
-	offset += size8bits
+	offset += size8bitsInBytes
 	size := int(Uint32(data[offset:]))
-	offset += size32bits
+	offset += size32bitsInBytes
 	*s = make([]uint32, size)
 	GetUint32s(data[offset:], *s)
-	offset += size32bits * size
+	offset += size32bitsInBytes * size
 	return offset
 }
 
@@ -680,12 +680,12 @@ func (s *decInt16s) load(data []byte, offset int) int {
 	if data[offset] != codecInt16s {
 		return offset
 	}
-	offset += size8bits
+	offset += size8bitsInBytes
 	size := int(Int32(data[offset:]))
-	offset += size32bits
+	offset += size32bitsInBytes
 	*s = make([]int16, size)
 	GetInt16s(data[offset:], *s)
-	offset += size16bits * size
+	offset += size16bitsInBytes * size
 	return offset
 }
 
@@ -693,12 +693,12 @@ func (s *decUint16s) load(data []byte, offset int) int {
 	if data[offset] != codecUint16s {
 		return offset
 	}
-	offset += size8bits
+	offset += size8bitsInBytes
 	size := int(Int32(data[offset:]))
-	offset += size32bits
+	offset += size32bitsInBytes
 	*s = make([]uint16, size)
 	GetUint16s(data[offset:], *s)
-	offset += size16bits * size
+	offset += size16bitsInBytes * size
 	return offset
 }
 
@@ -706,12 +706,12 @@ func (s *decInt8s) load(data []byte, offset int) int {
 	if data[offset] != codecInt8s {
 		return offset
 	}
-	offset += size8bits
+	offset += size8bitsInBytes
 	size := int(Int32(data[offset:]))
-	offset += size32bits
+	offset += size32bitsInBytes
 	*s = make([]int8, size)
 	GetInt8s(data[offset:], *s)
-	offset += size8bits * size
+	offset += size8bitsInBytes * size
 	return offset
 }
 
@@ -719,12 +719,12 @@ func (s *decUint8s) load(data []byte, offset int) int {
 	if data[offset] != codecUint8s {
 		return offset
 	}
-	offset += size8bits
+	offset += size8bitsInBytes
 	size := int(Int32(data[offset:]))
-	offset += size32bits
+	offset += size32bitsInBytes
 	*s = make([]uint8, size)
 	GetUint8s(data[offset:], *s)
-	offset += size8bits * size
+	offset += size8bitsInBytes * size
 	return offset
 }
 
@@ -732,12 +732,12 @@ func (s *decFloat64s) load(data []byte, offset int) int {
 	if data[offset] != codecFloat64s {
 		return offset
 	}
-	offset += size8bits
+	offset += size8bitsInBytes
 	size := int(Int32(data[offset:]))
-	offset += size32bits
+	offset += size32bitsInBytes
 	*s = make([]float64, size)
 	GetFloat64s(data[offset:], *s)
-	offset += size64bits * size
+	offset += size64bitsInBytes * size
 	return offset
 }
 
@@ -745,12 +745,12 @@ func (s *decFloat32s) load(data []byte, offset int) int {
 	if data[offset] != codecFloat32s {
 		return offset
 	}
-	offset += size8bits
+	offset += size8bitsInBytes
 	size := int(Int32(data[offset:]))
-	offset += size32bits
+	offset += size32bitsInBytes
 	*s = make([]float32, size)
 	GetFloat32s(data[offset:], *s)
-	offset += size32bits * size
+	offset += size32bitsInBytes * size
 	return offset
 }
 
