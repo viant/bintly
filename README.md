@@ -113,7 +113,7 @@ func (e *Employee) EncodeBinary(stream *bintly.Writer) error {
 
 ### Benchmark
 
-Benchmark uses [BenchStruct](marshaler_test.go#L16)  where slices got populated with 80 random items.
+Benchmark uses [BenchStruct](marshaler_test.go#L10)  where slices got populated with 80 random items.
 
 ```bash
 BenchmarkUnmarshal
