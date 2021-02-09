@@ -42,7 +42,7 @@ var emp := Employee{
 ```
 This maps to the following binary stream representation:
 ```
-100,4,test,3,1000,1002,1003,2,Lead,Principal,2,10,13
+100,4,test,3,1000,1002,1003,2,4,Lead,9,Principal,2,10,13
 ```
 
 In examples presented coma got preserved only for visualisation, also numeric/alphanumerics usage is for simplification.
