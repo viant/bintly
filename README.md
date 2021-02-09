@@ -117,17 +117,21 @@ Benchmark uses [BenchStruct](marshaler_test.go#L10)  where slices got populated 
 
 ```bash
 BenchmarkUnmarshalBintly
-BenchmarkUnmarshalBintly-16    	  872896	      1434 ns/op	    3762 B/op	       6 allocs/op
+BenchmarkUnmarshalBintly-16    	  753537	      1450 ns/op	    3762 B/op	       6 allocs/op
 BenchmarkMarshalBintly
-BenchmarkMarshalBintly-16      	 1000000	      1049 ns/op	    2305 B/op	       1 allocs/op
+BenchmarkMarshalBintly-16      	  987711	      1013 ns/op	    2305 B/op	       1 allocs/op
 BenchmarkUnmarshalBinary
-BenchmarkUnmarshalBinary-16    	  315751	      3246 ns/op	    3152 B/op	      79 allocs/op
+BenchmarkUnmarshalBinary-16    	  330844	      3321 ns/op	    3088 B/op	      72 allocs/op
 BenchmarkMarshalBinary
-BenchmarkMarshalBinary-16      	  234904	      5053 ns/op	    4536 B/op	       7 allocs/op
+BenchmarkMarshalBinary-16      	  202806	      5397 ns/op	    4536 B/op	       7 allocs/op
+BenchmarkMarshalGob
+BenchmarkMarshalGob-16         	   96930	     11255 ns/op	    9772 B/op	      38 allocs/op
+BenchmarkUnMarshalGob
+BenchmarkUnMarshalGob-16       	   39493	     30018 ns/op	   13608 B/op	     316 allocs/op
 BenchmarkJSONUnmarshal
-BenchmarkJSONUnmarshal-16      	   19051	     61436 ns/op	   15456 B/op	     314 allocs/op
+BenchmarkJSONUnmarshal-16      	   17343	     69063 ns/op	   15264 B/op	     305 allocs/op
 BenchmarkJSONMarshal
-BenchmarkJSONMarshal-16        	   58828	     21484 ns/op	    4210 B/op	       2 allocs/op
+BenchmarkJSONMarshal-16        	   55462	     21237 ns/op	    3570 B/op	       2 allocs/op
 ```
 
 

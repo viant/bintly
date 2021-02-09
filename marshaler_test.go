@@ -1,7 +1,9 @@
 package bintly
 
 import (
+	"bytes"
 	"encoding/binary"
+	"encoding/gob"
 	"encoding/json"
 	"github.com/stretchr/testify/assert"
 	bin "github.com/viant/bintly/binary"
@@ -107,6 +109,18 @@ func Test_BenchStruct(t *testing.T) {
 	b2 := &benchStruct{}
 	b2.FromBytes(data)
 	assert.EqualValues(t, b2, b1)
+
+	var buf bytes.Buffer
+	dec := gob.NewDecoder(&buf)
+	enc :=  gob.NewEncoder(&buf)
+	err = enc.Encode(b1)
+	assert.Nil(t, err)
+	c1:= &benchStruct{}
+	err = dec.Decode(c1)
+	assert.Nil(t, err)
+	assert.EqualValues(t, b1, c1)
+
+
 }
 
 func BenchmarkUnmarshalBintly(b *testing.B) {
@@ -139,12 +153,48 @@ func BenchmarkUnmarshalBinary(b *testing.B) {
 		c1.FromBytes(data)
 	}
 }
+
 func BenchmarkMarshalBinary(b *testing.B) {
 	b.ReportAllocs()
 	for i := 0; i < b.N; i++ {
 		b1.ToBytes()
 	}
 }
+
+func BenchmarkMarshalGob(b *testing.B) {
+	var buf bytes.Buffer
+	b.ResetTimer()
+	b.ReportAllocs()
+	for i := 0; i < b.N; i++ {
+		enc := gob.NewEncoder(&buf)
+		err := enc.Encode(b1)
+		if err != nil {
+			assert.NotNil(b, err)
+		}
+	}
+}
+
+
+func BenchmarkUnMarshalGob(b *testing.B) {
+	var buf bytes.Buffer
+	enc := gob.NewEncoder(&buf)
+	err := enc.Encode(b1)
+	if err != nil {
+		assert.NotNil(b, err)
+	}
+	data := buf.Bytes()
+	b.ResetTimer()
+	b.ReportAllocs()
+	for i := 0; i < b.N; i++ {
+		c1 := benchStruct{}
+		dec := gob.NewDecoder(bytes.NewReader(data))
+		err := dec.Decode(&c1)
+		if err != nil {
+			assert.NotNil(b, err)
+		}
+	}
+}
+
 
 func BenchmarkJSONUnmarshal(b *testing.B) {
 	data, err := json.Marshal(b1)
