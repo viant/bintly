@@ -21,7 +21,7 @@ for low latency applications.
 ## Introduction
 
 Typical streamlined binary serialization format store primitive types with their native size, and all collection type
-are pre seeded with the repeated data size. Imagine the follow struct:
+got pre seeded with the repeated data size. Imagine the follow struct:
 
 ```go
 type Employee struct {
@@ -40,10 +40,12 @@ var emp := Employee{
     DeptIDs: []int{10,13},
 }
 ```
-This could traditionally map to the following binary stream representation:
+This maps to the following binary stream representation:
 ```
 100,4,test,3,1000,1002,1003,2,Lead,Principal,2,10,13
 ```
+
+In examples presented coma got preserved only for visualisation, also numeric/alphanumerics usage is for simplification.
 
 When decoding this binary format each repeated type requires new memory allocation, in this case 6 allocations:
 3 for slices, and 3 for string type. 
@@ -58,7 +60,6 @@ alloc: [4,3,2,4,9,2]
 ints: [100,1000,1002,1003,10,13]
 uint8s: [test,Lead,Principal]
 ```
-In this example come is preserved only for visualisation, also numeric/alphanumerics usage is for simplification.
 
 
 ## Usage
