@@ -117,33 +117,33 @@ Benchmark uses [BenchStruct](stress/bench.go)  where slices got populated with 8
 
 ```bash
 BenchmarkUnmarshalBintly
-BenchmarkUnmarshalBintly-16           	  886302	      1311 ns/op	    3762 B/op	       6 allocs/op
+BenchmarkUnmarshalBintly-16           	  940587	      1263 ns/op	    3762 B/op	       6 allocs/op
 BenchmarkMarshalBintly
-BenchmarkMarshalBintly-16             	  884871	      1246 ns/op	    2484 B/op	       3 allocs/op
+BenchmarkMarshalBintly-16             	  856911	      1202 ns/op	    2484 B/op	       3 allocs/op
 BenchmarkUnmarshalBintlyReflect
-BenchmarkUnmarshalBintlyReflect-16    	  659103	      1670 ns/op	    3796 B/op	       7 allocs/op
+BenchmarkUnmarshalBintlyReflect-16    	  675956	      1675 ns/op	    3796 B/op	       7 allocs/op
 BenchmarkMarshalBintlyReflect
-BenchmarkMarshalBintlyReflect-16      	  643982	      1574 ns/op	    2506 B/op	      10 allocs/op
+BenchmarkMarshalBintlyReflect-16      	  580586	      1784 ns/op	    2507 B/op	      10 allocs/op
 BenchmarkUnmarshalBinary
-BenchmarkUnmarshalBinary-16           	  324630	      3406 ns/op	    3152 B/op	      78 allocs/op
+BenchmarkUnmarshalBinary-16           	  365941	      3306 ns/op	    3152 B/op	      73 allocs/op
 BenchmarkMarshalBinary
-BenchmarkMarshalBinary-16             	  241238	      4949 ns/op	    4536 B/op	       7 allocs/op
-BenchmarkMarshalGob
-BenchmarkMarshalGob-16                	   99133	     10373 ns/op	    9805 B/op	      36 allocs/op
-BenchmarkMarshalCbor
-BenchmarkMarshalCbor-16               	  234380	      5057 ns/op	    2194 B/op	       2 allocs/op
-BenchmarkUnmarshalCbor
-BenchmarkUnmarshalCbor-16             	  109696	     10075 ns/op	    3472 B/op	      84 allocs/op
-BenchmarkMarshalMsgPack
-BenchmarkMarshalMsgPack-16            	   93470	     11834 ns/op	    4722 B/op	       8 allocs/op
-BenchmarkUnmarshalMsgPack
-BenchmarkUnmarshalMsgPack-16          	   63546	     17666 ns/op	    4899 B/op	      89 allocs/op
+BenchmarkMarshalBinary-16             	  239450	      4868 ns/op	    4536 B/op	       7 allocs/op
 BenchmarkUnMarshalGob
-BenchmarkUnMarshalGob-16              	   44133	     26423 ns/op	   13928 B/op	     322 allocs/op
+BenchmarkUnMarshalGob-16              	   46789	     25958 ns/op	   13928 B/op	     317 allocs/op
+BenchmarkMarshalGob
+BenchmarkMarshalGob-16                	   96601	     10510 ns/op	    9956 B/op	      36 allocs/op
+BenchmarkUnmarshalCbor
+BenchmarkUnmarshalCbor-16             	  109017	     11655 ns/op	    3488 B/op	      79 allocs/op
+BenchmarkMarshalCbor
+BenchmarkMarshalCbor-16               	  216528	      5453 ns/op	    2194 B/op	       2 allocs/op
+BenchmarkUnmarshalMsgPack
+BenchmarkUnmarshalMsgPack-16          	   69460	     17462 ns/op	    4899 B/op	      84 allocs/op
+BenchmarkMarshalMsgPack
+BenchmarkMarshalMsgPack-16            	   99207	     12255 ns/op	    4722 B/op	       8 allocs/op
 BenchmarkJSONUnmarshal
-BenchmarkJSONUnmarshal-16             	   18291	     62308 ns/op	   15296 B/op	     310 allocs/op
+BenchmarkJSONUnmarshal-16             	   18126	     72414 ns/op	   15488 B/op	     308 allocs/op
 BenchmarkJSONMarshal
-BenchmarkJSONMarshal-16               	   65025	     18538 ns/op	    3717 B/op	       3 allocs/op
+BenchmarkJSONMarshal-16               	   52039	     21745 ns/op	    4359 B/op	       3 allocs/op
 ```
 
 

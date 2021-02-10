@@ -91,9 +91,6 @@ func BenchmarkMarshalBintly(b *testing.B) {
 	}
 }
 
-
-
-
 func BenchmarkUnmarshalBintlyReflect(b *testing.B) {
 	var a1  = BenchStructAlias(b1)
 	data, err := bintly.Marshal(&a1)
@@ -109,7 +106,6 @@ func BenchmarkUnmarshalBintlyReflect(b *testing.B) {
 	}
 }
 
-
 func BenchmarkMarshalBintlyReflect(b *testing.B) {
 	var a1  = BenchStructAlias(b1)
 	b.ResetTimer()
@@ -120,7 +116,6 @@ func BenchmarkMarshalBintlyReflect(b *testing.B) {
 	}
 	assert.Nil(b, err)
 }
-
 
 func BenchmarkUnmarshalBinary(b *testing.B) {
 	data, _ := b1.ToBytes()
@@ -139,58 +134,6 @@ func BenchmarkMarshalBinary(b *testing.B) {
 	}
 }
 
-func BenchmarkMarshalGob(b *testing.B) {
-	var buf bytes.Buffer
-	b.ResetTimer()
-	b.ReportAllocs()
-	for i := 0; i < b.N; i++ {
-		enc := gob.NewEncoder(&buf)
-		err := enc.Encode(b1)
-		if err != nil {
-			assert.NotNil(b, err)
-		}
-	}
-}
-
-func BenchmarkMarshalCbor(b *testing.B) {
-	b.ReportAllocs()
-	for i := 0; i < b.N; i++ {
-		_, _ = cbor.Marshal(b1)
-	}
-}
-
-func BenchmarkUnmarshalCbor(b *testing.B) {
-	data, err := cbor.Marshal(b1)
-	if !assert.Nil(b, err) {
-		return
-	}
-	b.ResetTimer()
-	b.ReportAllocs()
-	for i := 0; i < b.N; i++ {
-		c1 := BenchStruct{}
-		cbor.Unmarshal(data, &c1)
-	}
-}
-
-func BenchmarkMarshalMsgPack(b *testing.B) {
-	b.ReportAllocs()
-	for i := 0; i < b.N; i++ {
-		_, _ = msgpack.Marshal(b1)
-	}
-}
-
-func BenchmarkUnmarshalMsgPack(b *testing.B) {
-	data, err := msgpack.Marshal(b1)
-	if !assert.Nil(b, err) {
-		return
-	}
-	b.ResetTimer()
-	b.ReportAllocs()
-	for i := 0; i < b.N; i++ {
-		c1 := BenchStruct{}
-		msgpack.Unmarshal(data, &c1)
-	}
-}
 
 func BenchmarkUnMarshalGob(b *testing.B) {
 	var buf bytes.Buffer
@@ -211,6 +154,60 @@ func BenchmarkUnMarshalGob(b *testing.B) {
 		}
 	}
 }
+
+func BenchmarkMarshalGob(b *testing.B) {
+	var buf bytes.Buffer
+	b.ResetTimer()
+	b.ReportAllocs()
+	for i := 0; i < b.N; i++ {
+		enc := gob.NewEncoder(&buf)
+		err := enc.Encode(b1)
+		if err != nil {
+			assert.NotNil(b, err)
+		}
+	}
+}
+
+func BenchmarkUnmarshalCbor(b *testing.B) {
+	data, err := cbor.Marshal(b1)
+	if !assert.Nil(b, err) {
+		return
+	}
+	b.ResetTimer()
+	b.ReportAllocs()
+	for i := 0; i < b.N; i++ {
+		c1 := BenchStruct{}
+		cbor.Unmarshal(data, &c1)
+	}
+}
+
+func BenchmarkMarshalCbor(b *testing.B) {
+	b.ReportAllocs()
+	for i := 0; i < b.N; i++ {
+		_, _ = cbor.Marshal(b1)
+	}
+}
+
+func BenchmarkUnmarshalMsgPack(b *testing.B) {
+	data, err := msgpack.Marshal(b1)
+	if !assert.Nil(b, err) {
+		return
+	}
+	b.ResetTimer()
+	b.ReportAllocs()
+	for i := 0; i < b.N; i++ {
+		c1 := BenchStruct{}
+		msgpack.Unmarshal(data, &c1)
+	}
+}
+
+func BenchmarkMarshalMsgPack(b *testing.B) {
+	b.ReportAllocs()
+	for i := 0; i < b.N; i++ {
+		_, _ = msgpack.Marshal(b1)
+	}
+}
+
 
 func BenchmarkJSONUnmarshal(b *testing.B) {
 	data, err := json.Marshal(b1)
