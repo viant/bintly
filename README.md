@@ -113,25 +113,29 @@ func (e *Employee) EncodeBinary(stream *bintly.Writer) error {
 
 ### Benchmark
 
-Benchmark uses [BenchStruct](marshaler_test.go#L10)  where slices got populated with 80 random items.
+Benchmark uses [BenchStruct](stress/bench.go)  where slices got populated with 80 random items.
 
 ```bash
 BenchmarkUnmarshalBintly
-BenchmarkUnmarshalBintly-16    	  753537	      1450 ns/op	    3762 B/op	       6 allocs/op
+BenchmarkUnmarshalBintly-16    	  644394	      1626 ns/op	    3698 B/op	       6 allocs/op
 BenchmarkMarshalBintly
-BenchmarkMarshalBintly-16      	  987711	      1013 ns/op	    2305 B/op	       1 allocs/op
+BenchmarkMarshalBintly-16      	 1160833	      1165 ns/op	    2305 B/op	       1 allocs/op
 BenchmarkUnmarshalBinary
-BenchmarkUnmarshalBinary-16    	  330844	      3321 ns/op	    3088 B/op	      72 allocs/op
+BenchmarkUnmarshalBinary-16    	  331450	      3502 ns/op	    3088 B/op	      74 allocs/op
 BenchmarkMarshalBinary
-BenchmarkMarshalBinary-16      	  202806	      5397 ns/op	    4536 B/op	       7 allocs/op
+BenchmarkMarshalBinary-16      	  211546	      5565 ns/op	    4536 B/op	       7 allocs/op
 BenchmarkMarshalGob
-BenchmarkMarshalGob-16         	   96930	     11255 ns/op	    9772 B/op	      38 allocs/op
+BenchmarkMarshalGob-16         	   89200	     12076 ns/op	   11107 B/op	      39 allocs/op
+BenchmarkMarshalCbor
+BenchmarkMarshalCbor-16        	  211923	      5518 ns/op	    1793 B/op	       1 allocs/op
+BenchmarkUnmarshalCbor
+BenchmarkUnmarshalCbor-16      	   99536	     10938 ns/op	    3424 B/op	      80 allocs/op
 BenchmarkUnMarshalGob
-BenchmarkUnMarshalGob-16       	   39493	     30018 ns/op	   13608 B/op	     316 allocs/op
+BenchmarkUnMarshalGob-16       	   43074	     28224 ns/op	   13608 B/op	     318 allocs/op
 BenchmarkJSONUnmarshal
-BenchmarkJSONUnmarshal-16      	   17343	     69063 ns/op	   15264 B/op	     305 allocs/op
+BenchmarkJSONUnmarshal-16      	   17559	     64142 ns/op	   15360 B/op	     309 allocs/op
 BenchmarkJSONMarshal
-BenchmarkJSONMarshal-16        	   55462	     21237 ns/op	    3570 B/op	       2 allocs/op
+BenchmarkJSONMarshal-16        	   56258	     20362 ns/op	    4210 B/op	       2 allocs/op  
 ```
 
 
