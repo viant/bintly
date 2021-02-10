@@ -615,11 +615,11 @@ func (r *Reader) anyReflect(v interface{}) error {
 		if err := coder.set(value, rawType); err != nil {
 			return err
 		}
-		return coder.DecodeBinary(r)
+		return r.Coder(coder)
 	case reflect.Map:
-		//TODO add support to arbitrary map
+		//TODO add support for an arbitrary map
 	case reflect.Slice:
-		//TODO add support to arbitrary slice
+		//TODO add support for an arbitrary slice
 	}
 	return fmt.Errorf("unsupproted readers type: %T", v)
 }

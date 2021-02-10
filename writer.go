@@ -151,11 +151,11 @@ func (w *Writer) anyReflect(v interface{}) error {
 		if err := coder.set(value, rawType); err != nil {
 			return err
 		}
-		return coder.EncodeBinary(w)
+		return w.Coder(coder)
 	case reflect.Map:
-		//TODO add support to arbitrary map
+		//TODO add support for an arbitrary map
 	case reflect.Slice:
-		//TODO add support to arbitrary slice
+		//TODO add support for an arbitrary slice
 	}
 	return fmt.Errorf("unsupproted writer type: %T", v)
 }
