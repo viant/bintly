@@ -2,19 +2,17 @@ package stress
 
 import (
 	"bytes"
-	"encoding/binary"
 	"encoding/gob"
 	"encoding/json"
 	"github.com/fxamacker/cbor"
-	"github.com/vmihailenco/msgpack"
 	"github.com/stretchr/testify/assert"
 	"github.com/viant/bintly"
-	bin "github.com/viant/bintly/binary"
+	"github.com/vmihailenco/msgpack"
 	"math"
 	"testing"
 )
 
-var b1 = &BenchStruct{
+var b1 = BenchStruct{
 	A1: math.MaxInt32,
 	A2: "this is benchmark test",
 	A3: true,
@@ -25,96 +23,55 @@ var b1 = &BenchStruct{
 	A8: uint8Slice,
 }
 
-//DecodeBinary decode bindly stream
-func (m *BenchStruct) DecodeBinary(stream *bintly.Reader) error {
-	stream.Int(&m.A1)
-	stream.String(&m.A2)
-	stream.Bool(&m.A3)
-	stream.Float64(&m.A4)
-	stream.Ints(&m.A5)
-	stream.Strings(&m.A6)
-	stream.Float64s(&m.A7)
-	stream.Uint8s(&m.A8)
-	return nil
-}
-
-//EncodeBinary encodes bintly stream
-func (m *BenchStruct) EncodeBinary(stream *bintly.Writer) error {
-	stream.Int(m.A1)
-	stream.String(m.A2)
-	stream.Bool(m.A3)
-	stream.Float64(m.A4)
-	stream.Ints(m.A5)
-	stream.Strings(m.A6)
-	stream.Float64s(m.A7)
-	stream.Uint8s(m.A8)
-	return nil
-}
-
-//ToBytes converts to bytes with wrapped encoding/binary ByteOrder
-func (m *BenchStruct) ToBytes() ([]byte, error) {
-	writer := bin.NewWriter(binary.LittleEndian)
-	if err := writer.Int(m.A1); err != nil {
-		return nil, err
-	}
-	if err := writer.String(m.A2); err != nil {
-		return nil, err
-	}
-	if err := writer.Bool(m.A3); err != nil {
-		return nil, err
-	}
-	if err := writer.Float64(m.A4); err != nil {
-		return nil, err
-	}
-	if err := writer.Ints(m.A5); err != nil {
-		return nil, err
-	}
-	if err := writer.Strings(m.A6); err != nil {
-		return nil, err
-	}
-	if err := writer.Float64s(m.A7); err != nil {
-		return nil, err
-	}
-	if err := writer.Bytes(m.A8); err != nil {
-		return nil, err
-	}
-	return writer.ToBytes(), nil
-}
-
-//ToBytes converts from bytes with wrapped encoding/binary ByteOrder
-func (m *BenchStruct) FromBytes(bs []byte) {
-	reader := bin.NewReader(bs, binary.LittleEndian)
-	m.A1 = reader.Int()
-	m.A2 = reader.String()
-	m.A3 = reader.Bool()
-	m.A4 = reader.Float64()
-	m.A5 = reader.Ints()
-	m.A6 = reader.Strings()
-	m.A7 = reader.Float64s()
-	m.A8 = reader.Bytes()
-}
 
 func Test_BenchStruct(t *testing.T) {
-	data, err := b1.ToBytes()
-	assert.Nil(t, err)
-	b2 := &BenchStruct{}
-	b2.FromBytes(data)
-	assert.EqualValues(t, b2, b1)
 
-	var buf bytes.Buffer
-	dec := gob.NewDecoder(&buf)
-	enc := gob.NewEncoder(&buf)
-	err = enc.Encode(b1)
-	assert.Nil(t, err)
-	c1 := &BenchStruct{}
-	err = dec.Decode(c1)
-	assert.Nil(t, err)
-	assert.EqualValues(t, b1, c1)
+	{//test custom binary
+		data, err := b1.ToBytes()
+		assert.Nil(t, err)
+		clone := BenchStruct{}
+		clone.FromBytes(data)
+		assert.EqualValues(t, clone, b1)
+	}
+	{//test custom bintly
+		data, err := bintly.Marshal(&b1)
+		assert.Nil(t, err)
+		clone := BenchStruct{}
+		err = bintly.Unmarshal(data, &clone)
+		assert.EqualValues(t, clone, b1)
+	}
+	{//test bintly reflect
+		alias := BenchStructAlias(b1)
+		data, err := bintly.Marshal(&alias)
+		assert.Nil(t, err)
+		clone := BenchStructAlias{}
+		err = bintly.Unmarshal(data, &clone)
+		assert.EqualValues(t, clone, b1)
+	}
+	{ //test gob
+		var buf bytes.Buffer
+		dec := gob.NewDecoder(&buf)
+		enc := gob.NewEncoder(&buf)
+		err := enc.Encode(&b1)
+		assert.Nil(t, err)
+		clone := BenchStruct{}
+		err = dec.Decode(&clone)
+		assert.Nil(t, err)
+		assert.EqualValues(t, b1, clone)
+	}
+	{//test cobr reflect
+		alias := BenchStructAlias(b1)
+		data, err := cbor.Marshal(&alias)
+		assert.Nil(t, err)
+		clone := BenchStructAlias{}
+		err = cbor.Unmarshal(data, &clone)
+		assert.EqualValues(t, clone, b1)
+	}
 
 }
 
 func BenchmarkUnmarshalBintly(b *testing.B) {
-	data, err := bintly.Marshal(b1)
+	data, err := bintly.Marshal(&b1)
 	assert.Nil(b, err)
 	b.ResetTimer()
 	b.ReportAllocs()
@@ -133,6 +90,37 @@ func BenchmarkMarshalBintly(b *testing.B) {
 		_, _ = bintly.Marshal(b1)
 	}
 }
+
+
+
+
+func BenchmarkUnmarshalBintlyReflect(b *testing.B) {
+	var a1  = BenchStructAlias(b1)
+	data, err := bintly.Marshal(&a1)
+	assert.Nil(b, err)
+	b.ResetTimer()
+	b.ReportAllocs()
+	for i := 0; i < b.N; i++ {
+		var b1 BenchStructAlias
+		err = bintly.Unmarshal(data, &b1)
+		if err != nil {
+			assert.Nil(b, err)
+		}
+	}
+}
+
+
+func BenchmarkMarshalBintlyReflect(b *testing.B) {
+	var a1  = BenchStructAlias(b1)
+	b.ResetTimer()
+	b.ReportAllocs()
+	var err error
+	for i := 0; i < b.N; i++ {
+		_, err = bintly.Marshal(&a1)
+	}
+	assert.Nil(b, err)
+}
+
 
 func BenchmarkUnmarshalBinary(b *testing.B) {
 	data, _ := b1.ToBytes()

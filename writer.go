@@ -2,6 +2,7 @@ package bintly
 
 import (
 	"fmt"
+	"reflect"
 	"sync"
 	"time"
 )
@@ -132,9 +133,31 @@ func (w *Writer) Any(v interface{}) error {
 		if ok {
 			return w.Coder(encoder)
 		}
-		return fmt.Errorf("unsupproted writer type: %T", v)
+		return w.anyReflect(v)
 	}
 	return nil
+}
+
+func (w *Writer) anyReflect(v interface{}) error {
+	value := reflect.ValueOf(v)
+	rawType := reflect.TypeOf(v)
+	if rawType.Kind() == reflect.Ptr {
+		rawType = rawType.Elem()
+	}
+	switch rawType.Kind() {
+	case reflect.Struct:
+		coder := structCoders.Get()
+		defer structCoders.Put(coder)
+		if err := coder.set(value, rawType); err != nil {
+			return err
+		}
+		return coder.EncodeBinary(w)
+	case reflect.Map:
+		//TODO add support to arbitrary map
+	case reflect.Slice:
+		//TODO add support to arbitrary slice
+	}
+	return fmt.Errorf("unsupproted writer type: %T", v)
 }
 
 //Alloc append data allocation size for repeater or pointers(0,1) types

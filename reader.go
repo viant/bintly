@@ -2,6 +2,7 @@ package bintly
 
 import (
 	"fmt"
+	"reflect"
 	"sync"
 	"time"
 )
@@ -132,7 +133,7 @@ func (r *Reader) Any(v interface{}) error {
 		if ok {
 			return r.Coder(coder)
 		}
-		return fmt.Errorf("unsupproted readers type: %T", v)
+		return r.anyReflect(v)
 	}
 	return nil
 }
@@ -596,6 +597,28 @@ func (r *Reader) FromBytes(data []byte) error {
 		return fmt.Errorf("corrupted bintly stream expected: %v, but had %v", codecEOF, data[offset])
 	}
 	return nil
+}
+
+func (r *Reader) anyReflect(v interface{}) error {
+	value := reflect.ValueOf(v)
+	rawType := reflect.TypeOf(v)
+	if rawType.Kind() == reflect.Ptr {
+		rawType = rawType.Elem()
+	}
+	switch rawType.Kind() {
+	case reflect.Struct:
+		coder := structCoders.Get()
+		defer structCoders.Put(coder)
+		if err := coder.set(value, rawType); err != nil {
+			return err
+		}
+		return coder.DecodeBinary(r)
+	case reflect.Map:
+		//TODO add support to arbitrary map
+	case reflect.Slice:
+		//TODO add support to arbitrary slice
+	}
+	return fmt.Errorf("unsupproted readers type: %T", v)
 }
 
 func (s *decInts) load(data []byte, offset int) int {

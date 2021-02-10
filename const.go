@@ -3,7 +3,7 @@ package bintly
 import "math/bits"
 
 const (
-	sizeIntInBytes    = bits.UintSize/8
+	sizeIntInBytes    = bits.UintSize / 8
 	size64bitsInBytes = 8
 	size32bitsInBytes = 4
 	size16bitsInBytes = 2
