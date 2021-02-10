@@ -6,6 +6,7 @@ import (
 	"encoding/gob"
 	"encoding/json"
 	"github.com/fxamacker/cbor"
+	"github.com/vmihailenco/msgpack"
 	"github.com/stretchr/testify/assert"
 	"github.com/viant/bintly"
 	bin "github.com/viant/bintly/binary"
@@ -180,6 +181,26 @@ func BenchmarkUnmarshalCbor(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		c1 := BenchStruct{}
 		cbor.Unmarshal(data, &c1)
+	}
+}
+
+func BenchmarkMarshalMsgPack(b *testing.B) {
+	b.ReportAllocs()
+	for i := 0; i < b.N; i++ {
+		_, _ = msgpack.Marshal(b1)
+	}
+}
+
+func BenchmarkUnmarshalMsgPack(b *testing.B) {
+	data, err := msgpack.Marshal(b1)
+	if !assert.Nil(b, err) {
+		return
+	}
+	b.ResetTimer()
+	b.ReportAllocs()
+	for i := 0; i < b.N; i++ {
+		c1 := BenchStruct{}
+		msgpack.Unmarshal(data, &c1)
 	}
 }
 
