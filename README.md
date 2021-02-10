@@ -9,6 +9,8 @@ Please refer to [`CHANGELOG.md`](CHANGELOG.md) if you encounter breaking changes
 
 - [Motivation](#motivation)
 - [Introduction](#introduction)
+- [Usage](#usage)
+- [Bugs](#bugs)
 - [Contribution](#contributing-to-bintly)
 - [License](#license)
 
@@ -66,9 +68,6 @@ In addition, all native data got copied to bytes back and forth without any conv
 improving additionally speed. Since there is no specific data conversion used,
 all serialized data uses native golang numeric data type representation. 
 
-This package uses architecture dependent encoding (native go representation).
-User of the package should ensure that it is compatible with the needed platforms and architectures.
-
 
 ## Usage
 
@@ -117,6 +116,11 @@ func (e *Employee) EncodeBinary(stream *bintly.Writer) error {
 
 
 #### Working with Objects
+
+### Bugs
+
+This package uses architecture dependent encoding (native go representation).
+User of the package should ensure that it is compatible with the needed platforms and architectures.
 
 
 ### Benchmark
