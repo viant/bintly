@@ -447,21 +447,6 @@ func (w *Writer) Coder(v Encoder) error {
 	return nil
 }
 
-func (w *Writer) reset() {
-	w.alloc = w.alloc[:0]
-	w.encInts = w.encInts[:0]
-	w.encUints = w.encUints[:0]
-	w.encInt64s = w.encInt64s[:0]
-	w.encUint64s = w.encUint64s[:0]
-	w.encInt32s = w.encInt32s[:0]
-	w.encUint32s = w.encUint32s[:0]
-	w.encInt16s = w.encInt16s[:0]
-	w.encUint16s = w.encUint16s[:0]
-	w.encInt8s = w.encInt8s[:0]
-	w.encUint8s = w.encUint8s[:0]
-	w.encFloat64s = w.encFloat64s[:0]
-	w.encFloat32s = w.encFloat32s[:0]
-}
 
 //Size returns data size
 func (w *Writer) Size() int {
@@ -479,20 +464,46 @@ func (w *Writer) Size() int {
 func (w *Writer) Bytes() []byte {
 	var data = make([]byte, w.Size())
 	offset := 0
-	offset = w.alloc.store(data, offset, codecAlloc)
-	offset = w.encInts.store(data, offset)
-	offset = w.encFloat64s.store(data, offset)
-	offset = w.encUint8s.store(data, offset)
-	offset = w.encFloat32s.store(data, offset)
-	offset = w.encUints.store(data, offset)
-	offset = w.encInt64s.store(data, offset)
-	offset = w.encUint64s.store(data, offset)
-	offset = w.encInt32s.store(data, offset)
-	offset = w.encUint32s.store(data, offset, codecUint32s)
-	offset = w.encInt16s.store(data, offset)
-	offset = w.encUint16s.store(data, offset)
-	offset = w.encInt8s.store(data, offset)
-	w.reset()
+	var ok bool
+	if offset, ok = w.alloc.store(data, offset, codecAlloc); ok {
+		w.alloc = w.alloc[:0]
+	}
+	if offset, ok = w.encInts.store(data, offset); ok {
+		w.encInts = w.encInts[:0]
+	}
+	if offset, ok = w.encFloat64s.store(data, offset); ok {
+		w.encFloat64s = w.encFloat64s[:0]
+	}
+	if offset, ok = w.encUint8s.store(data, offset); ok {
+		w.encUint8s = w.encUint8s[:0]
+	}
+	if offset, ok = w.encFloat32s.store(data, offset); ok {
+		w.encFloat32s = w.encFloat32s[:0]
+	}
+	if offset, ok = w.encUints.store(data, offset); ok {
+		w.encUints = w.encUints[:0]
+	}
+	if offset, ok = w.encInt64s.store(data, offset); ok {
+		w.encInt64s = w.encInt64s[:0]
+	}
+	if offset, ok = w.encUint64s.store(data, offset); ok {
+		w.encUint64s = w.encUint64s[:0]
+	}
+	if offset, ok = w.encInt32s.store(data, offset); ok {
+		w.encInt32s = w.encInt32s[:0]
+	}
+	if offset, ok = w.encUint32s.store(data, offset, codecUint32s); ok {
+		w.encUint32s = w.encUint32s[:0]
+	}
+	if offset, ok = w.encInt16s.store(data, offset); ok {
+		w.encInt16s = w.encInt16s[:0]
+	}
+	if offset, ok = w.encUint16s.store(data, offset); ok {
+		w.encUint16s = w.encUint16s[:0]
+	}
+	if offset, ok = w.encInt8s.store(data, offset); ok {
+		w.encInt8s = w.encInt8s[:0]
+	}
 	data[offset] = codecEOF
 	return data
 }
@@ -506,10 +517,10 @@ func (s *encInts) appendInts(vs []int) {
 	*s = append(*s, vs...)
 }
 
-func (s *encInts) store(data []byte, offset int) int {
+func (s *encInts) store(data []byte, offset int) (int, bool) {
 	size := len(*s)
 	if size == 0 {
-		return offset
+		return offset, false
 	}
 	data[offset] = codecInts
 	offset += size8bitsInBytes
@@ -517,7 +528,7 @@ func (s *encInts) store(data []byte, offset int) int {
 	offset += size32bitsInBytes
 	PutInts(data[offset:], *s)
 	offset += sizeIntInBytes * size
-	return offset
+	return offset, true
 }
 
 func (s *encInts) size() int {
@@ -536,10 +547,10 @@ func (s *encUints) appendUints(vs []uint) {
 	*s = append(*s, vs...)
 }
 
-func (s *encUints) store(data []byte, offset int) int {
+func (s *encUints) store(data []byte, offset int) (int, bool) {
 	size := len(*s)
 	if size == 0 {
-		return offset
+		return offset, false
 	}
 	data[offset] = codecUints
 	offset += size8bitsInBytes
@@ -547,7 +558,7 @@ func (s *encUints) store(data []byte, offset int) int {
 	offset += size32bitsInBytes
 	PutUints(data[offset:], *s)
 	offset += sizeIntInBytes * size
-	return offset
+	return offset, true
 }
 
 func (s *encUints) size() int {
@@ -566,10 +577,10 @@ func (s *encInt64s) appendInt64s(vs []int64) {
 	*s = append(*s, vs...)
 }
 
-func (s *encInt64s) store(data []byte, offset int) int {
+func (s *encInt64s) store(data []byte, offset int) (int, bool) {
 	size := len(*s)
 	if size == 0 {
-		return offset
+		return offset, false
 	}
 	data[offset] = codecInt64s
 	offset += size8bitsInBytes
@@ -577,7 +588,7 @@ func (s *encInt64s) store(data []byte, offset int) int {
 	offset += size32bitsInBytes
 	PutInt64s(data[offset:], *s)
 	offset += size64bitsInBytes * size
-	return offset
+	return offset, true
 }
 
 func (s *encInt64s) size() int {
@@ -596,10 +607,10 @@ func (s *encUint64s) appendUint64s(vs []uint64) {
 	*s = append(*s, vs...)
 }
 
-func (s *encUint64s) store(data []byte, offset int) int {
+func (s *encUint64s) store(data []byte, offset int) (int, bool) {
 	size := len(*s)
 	if size == 0 {
-		return offset
+		return offset, false
 	}
 	data[offset] = codecUint64s
 	offset += size8bitsInBytes
@@ -607,7 +618,7 @@ func (s *encUint64s) store(data []byte, offset int) int {
 	offset += size32bitsInBytes
 	PutUint64s(data[offset:], *s)
 	offset += size64bitsInBytes * size
-	return offset
+	return offset, true
 }
 
 func (s *encUint64s) size() int {
@@ -626,10 +637,10 @@ func (s *encInt32s) appendInt32s(v []int32) {
 	*s = append(*s, v...)
 }
 
-func (s *encInt32s) store(data []byte, offset int) int {
+func (s *encInt32s) store(data []byte, offset int) (int, bool) {
 	size := len(*s)
 	if size == 0 {
-		return offset
+		return offset, false
 	}
 	data[offset] = codecInt32s
 	offset += size8bitsInBytes
@@ -637,7 +648,7 @@ func (s *encInt32s) store(data []byte, offset int) int {
 	offset += size32bitsInBytes
 	PutInt32s(data[offset:], *s)
 	offset += size32bitsInBytes * size
-	return offset
+	return offset, true
 }
 
 func (s *encInt32s) size() int {
@@ -656,10 +667,10 @@ func (s *encUint32s) appendUint32s(v []uint32) {
 	*s = append(*s, v...)
 }
 
-func (s *encUint32s) store(data []byte, offset int, codec uint8) int {
+func (s *encUint32s) store(data []byte, offset int, codec uint8) (int, bool) {
 	size := len(*s)
 	if size == 0 {
-		return offset
+		return offset, false
 	}
 	data[offset] = codec
 	offset += size8bitsInBytes
@@ -667,7 +678,7 @@ func (s *encUint32s) store(data []byte, offset int, codec uint8) int {
 	offset += size32bitsInBytes
 	PutUint32s(data[offset:], *s)
 	offset += size32bitsInBytes * size
-	return offset
+	return offset, true
 }
 
 func (s *encUint32s) size() int {
@@ -686,10 +697,10 @@ func (s *encInt16s) appendInt16s(v []int16) {
 	*s = append(*s, v...)
 }
 
-func (s *encInt16s) store(data []byte, offset int) int {
+func (s *encInt16s) store(data []byte, offset int) (int, bool) {
 	size := len(*s)
 	if size == 0 {
-		return offset
+		return offset, false
 	}
 	data[offset] = codecInt16s
 	offset += size8bitsInBytes
@@ -697,7 +708,7 @@ func (s *encInt16s) store(data []byte, offset int) int {
 	offset += size32bitsInBytes
 	PutInt16s(data[offset:], *s)
 	offset += size16bitsInBytes * size
-	return offset
+	return offset, true
 }
 
 func (s *encInt16s) size() int {
@@ -716,10 +727,10 @@ func (s *encUint16s) appendUint16s(v []uint16) {
 	*s = append(*s, v...)
 }
 
-func (s *encUint16s) store(data []byte, offset int) int {
+func (s *encUint16s) store(data []byte, offset int) (int, bool) {
 	size := len(*s)
 	if size == 0 {
-		return offset
+		return offset, false
 	}
 	data[offset] = codecUint16s
 	offset += size8bitsInBytes
@@ -727,7 +738,7 @@ func (s *encUint16s) store(data []byte, offset int) int {
 	offset += size32bitsInBytes
 	PutUint16s(data[offset:], *s)
 	offset += size16bitsInBytes * size
-	return offset
+	return offset, true
 }
 
 func (s *encUint16s) size() int {
@@ -746,10 +757,10 @@ func (s *encInt8s) appendInt8s(v []int8) {
 	*s = append(*s, v...)
 }
 
-func (s *encInt8s) store(data []byte, offset int) int {
+func (s *encInt8s) store(data []byte, offset int) (int, bool) {
 	size := len(*s)
 	if size == 0 {
-		return offset
+		return offset, false
 	}
 	data[offset] = codecInt8s
 	offset += size8bitsInBytes
@@ -757,7 +768,7 @@ func (s *encInt8s) store(data []byte, offset int) int {
 	offset += size32bitsInBytes
 	PutInt8s(data[offset:], *s)
 	offset += size8bitsInBytes * size
-	return offset
+	return offset, true
 }
 
 func (s *encInt8s) size() int {
@@ -776,10 +787,10 @@ func (s *encUint8s) appendUint8s(v []uint8) {
 	*s = append(*s, v...)
 }
 
-func (s *encUint8s) store(data []byte, offset int) int {
+func (s *encUint8s) store(data []byte, offset int) (int, bool) {
 	size := len(*s)
 	if size == 0 {
-		return offset
+		return offset, false
 	}
 	data[offset] = codecUint8s
 	offset += size8bitsInBytes
@@ -787,7 +798,7 @@ func (s *encUint8s) store(data []byte, offset int) int {
 	offset += size32bitsInBytes
 	PutUint8s(data[offset:], *s)
 	offset += size8bitsInBytes * size
-	return offset
+	return offset, true
 }
 
 func (s *encUint8s) size() int {
@@ -806,10 +817,10 @@ func (s *encFloat64s) appendFloat64s(v []float64) {
 	*s = append(*s, v...)
 }
 
-func (s *encFloat64s) store(data []byte, offset int) int {
+func (s *encFloat64s) store(data []byte, offset int) (int, bool) {
 	size := len(*s)
 	if size == 0 {
-		return offset
+		return offset, false
 	}
 	data[offset] = codecFloat64s
 	offset += size8bitsInBytes
@@ -817,7 +828,7 @@ func (s *encFloat64s) store(data []byte, offset int) int {
 	offset += size32bitsInBytes
 	PutFloat64s(data[offset:], *s)
 	offset += size64bitsInBytes * size
-	return offset
+	return offset, true
 }
 
 func (s *encFloat64s) size() int {
@@ -836,10 +847,10 @@ func (s *encFloat32s) appendFloat32s(v []float32) {
 	*s = append(*s, v...)
 }
 
-func (s *encFloat32s) store(data []byte, offset int) int {
+func (s *encFloat32s) store(data []byte, offset int) (int, bool) {
 	size := len(*s)
 	if size == 0 {
-		return offset
+		return offset, false
 	}
 	data[offset] = codecFloat32s
 	offset += size8bitsInBytes
@@ -847,7 +858,7 @@ func (s *encFloat32s) store(data []byte, offset int) int {
 	offset += size32bitsInBytes
 	PutFloat32s(data[offset:], *s)
 	offset += size32bitsInBytes * size
-	return offset
+	return offset, true
 }
 
 func (s *encFloat32s) size() int {

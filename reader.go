@@ -585,6 +585,9 @@ func (r *Reader) FromBytes(data []byte) error {
 		return nil
 	}
 	offset = r.decFloat32s.load(data, offset)
+	if data[offset] == codecEOF {
+		return nil
+	}
 	offset = r.decUints.load(data, offset)
 	offset = r.decInt64s.load(data, offset)
 	offset = r.decUint64s.load(data, offset)

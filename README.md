@@ -117,34 +117,35 @@ Benchmark uses [BenchStruct](stress/bench.go)  where slices got populated with 8
 
 ```bash
 BenchmarkUnmarshalBintly
-BenchmarkUnmarshalBintly-16           	  774116	      1343 ns/op	    3762 B/op	       6 allocs/op
+BenchmarkUnmarshalBintly-16           	  886302	      1311 ns/op	    3762 B/op	       6 allocs/op
 BenchmarkMarshalBintly
-BenchmarkMarshalBintly-16             	  817696	      1290 ns/op	    2484 B/op	       3 allocs/op
+BenchmarkMarshalBintly-16             	  884871	      1246 ns/op	    2484 B/op	       3 allocs/op
 BenchmarkUnmarshalBintlyReflect
-BenchmarkUnmarshalBintlyReflect-16    	  551065	      1834 ns/op	    3796 B/op	       7 allocs/op
+BenchmarkUnmarshalBintlyReflect-16    	  659103	      1670 ns/op	    3796 B/op	       7 allocs/op
 BenchmarkMarshalBintlyReflect
-BenchmarkMarshalBintlyReflect-16      	  687597	      1608 ns/op	    2506 B/op	      10 allocs/op
+BenchmarkMarshalBintlyReflect-16      	  643982	      1574 ns/op	    2506 B/op	      10 allocs/op
 BenchmarkUnmarshalBinary
-BenchmarkUnmarshalBinary-16           	  364731	      3052 ns/op	    3136 B/op	      75 allocs/op
+BenchmarkUnmarshalBinary-16           	  324630	      3406 ns/op	    3152 B/op	      78 allocs/op
 BenchmarkMarshalBinary
-BenchmarkMarshalBinary-16             	  229171	      5112 ns/op	    4536 B/op	       7 allocs/op
+BenchmarkMarshalBinary-16             	  241238	      4949 ns/op	    4536 B/op	       7 allocs/op
 BenchmarkMarshalGob
-BenchmarkMarshalGob-16                	   95042	     10800 ns/op	   11011 B/op	      37 allocs/op
+BenchmarkMarshalGob-16                	   99133	     10373 ns/op	    9805 B/op	      36 allocs/op
 BenchmarkMarshalCbor
-BenchmarkMarshalCbor-16               	  211836	      5137 ns/op	    2193 B/op	       2 allocs/op
+BenchmarkMarshalCbor-16               	  234380	      5057 ns/op	    2194 B/op	       2 allocs/op
 BenchmarkUnmarshalCbor
-BenchmarkUnmarshalCbor-16             	  108412	     10068 ns/op	    3456 B/op	      81 allocs/op
+BenchmarkUnmarshalCbor-16             	  109696	     10075 ns/op	    3472 B/op	      84 allocs/op
 BenchmarkMarshalMsgPack
-BenchmarkMarshalMsgPack-16            	   94784	     12075 ns/op	    4722 B/op	       8 allocs/op
+BenchmarkMarshalMsgPack-16            	   93470	     11834 ns/op	    4722 B/op	       8 allocs/op
 BenchmarkUnmarshalMsgPack
-BenchmarkUnmarshalMsgPack-16          	   64592	     18064 ns/op	    4883 B/op	      86 allocs/op
+BenchmarkUnmarshalMsgPack-16          	   63546	     17666 ns/op	    4899 B/op	      89 allocs/op
 BenchmarkUnMarshalGob
-BenchmarkUnMarshalGob-16              	   43563	     25887 ns/op	   13656 B/op	     319 allocs/op
+BenchmarkUnMarshalGob-16              	   44133	     26423 ns/op	   13928 B/op	     322 allocs/op
 BenchmarkJSONUnmarshal
-BenchmarkJSONUnmarshal-16             	   18273	     62841 ns/op	   15536 B/op	     314 allocs/op
+BenchmarkJSONUnmarshal-16             	   18291	     62308 ns/op	   15296 B/op	     310 allocs/op
 BenchmarkJSONMarshal
-BenchmarkJSONMarshal-16               	   60330	     19319 ns/op	    4358 B/op	       3 allocs/op
+BenchmarkJSONMarshal-16               	   65025	     18538 ns/op	    3717 B/op	       3 allocs/op
 ```
+
 
 
 <a name="License"></a>
