@@ -66,6 +66,7 @@ In addition, all native data got copied to bytes back and forth without any conv
 improving additionally speed. Since there is no specific data conversion used,
 all serialized data uses native golang numeric data type representation. 
 
+See [platform architecture](https://golang.org/pkg/sync/atomic/#pkg-note-BUG) related limitation.
 
 ## Usage
 
