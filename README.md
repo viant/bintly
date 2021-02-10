@@ -68,7 +68,6 @@ all serialized data uses native golang numeric data type representation.
 
 This package uses architecture dependent encoding (native go representation).
 User of the package should ensure that it is compatible with the needed platforms and architectures.
-See more [platform architecture](https://golang.org/pkg/sync/atomic/#pkg-note-BUG) related limitation.
 
 
 ## Usage
