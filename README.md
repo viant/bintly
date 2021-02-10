@@ -61,6 +61,11 @@ ints: [100,1000,1002,1003,10,13]
 uint8s: [test,Lead,Principal]
 ```
 
+The performance of this library comes by reducing memory allocation. 
+In addition, all native data got copied to bytes back and forth without any conversion, 
+improving additionally speed. Since there is no specific data conversion used,
+all serialized data uses native golang numeric data type representation. 
+
 
 ## Usage
 
