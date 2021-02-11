@@ -157,3 +157,77 @@ func newStructCoderPool() *structCoderPool {
 }
 
 var structCoders = newStructCoderPool()
+
+type sliceCoder struct {
+	ptr      *reflect.Value
+	index    int
+	isNil    bool
+	v        reflect.Value
+	elemType reflect.Type //element type
+}
+
+func (c *sliceCoder) set(v reflect.Value, t reflect.Type) {
+	c.index = 0
+	c.isNil = false
+	c.v = v
+	if v.Kind() == reflect.Ptr {
+		c.ptr = &v
+		c.isNil = c.ptr.IsNil()
+		if !c.isNil {
+			c.v = v.Elem()
+		}
+	}
+	c.elemType = t.Elem()
+}
+
+//Alloc returns slice size
+func (c *sliceCoder) Alloc() uint32 {
+	if c.isNil {
+		return 0
+	}
+	return uint32(c.v.Len())
+}
+
+//SetAlloc set allocation, if zero the pointer to struct is nil
+func (c *sliceCoder) SetAlloc(allocation uint32) {
+	c.v = reflect.MakeSlice(reflect.SliceOf(c.elemType), int(allocation), int(allocation))
+	c.ptr.Elem().Set(c.v)
+}
+
+//EncodeBinary writes slice to stream
+func (c *sliceCoder) EncodeBinary(stream *Writer) error {
+	item := c.v.Index(c.index)
+	c.index++
+	return stream.Any(item.Interface())
+}
+
+//DecodeBinary reads slice from stream
+func (c *sliceCoder) DecodeBinary(stream *Reader) error {
+	elem := reflect.New(c.elemType)
+	if err := stream.Any(elem.Interface()); err != nil {
+		return err
+	}
+	c.v.Index(c.index).Set(elem.Elem())
+	c.index++
+	return nil
+}
+
+type sliceCoderPool struct {
+	sync.Pool
+}
+
+func (s *sliceCoderPool) Get() *sliceCoder {
+	return s.Pool.Get().(*sliceCoder)
+}
+
+func newSliceCoderPool() *sliceCoderPool {
+	return &sliceCoderPool{
+		Pool: sync.Pool{
+			New: func() interface{} {
+				return &sliceCoder{}
+			},
+		},
+	}
+}
+
+var sliceCoders = newSliceCoderPool()

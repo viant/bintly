@@ -641,6 +641,11 @@ func (r *Reader) anyReflect(v interface{}) error {
 	case reflect.Map:
 		//TODO add support for an arbitrary map
 	case reflect.Slice:
+		coder :=sliceCoders.Get()
+		defer sliceCoders.Put(coder)
+		coder.set(value, rawType)
+		return r.Coder(coder)
+
 		//TODO add support for an arbitrary slice
 	default:
 		//handles natives type aliases

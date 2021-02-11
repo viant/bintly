@@ -71,8 +71,10 @@ func TestStructCoder_DecodeBinary(t *testing.T) {
 			value: struct {
 				I     intAlias
 				Bytes []byte
-				Z     *intAlias
-			}{102, []byte("123"), &ia},
+				X     *intAlias
+				Y     []intAlias
+				Z     []*intAlias
+			}{102, []byte("123"), &ia, []intAlias{1, 2, 3}, []*intAlias{&ia}},
 		},
 	}
 
