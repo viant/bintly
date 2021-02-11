@@ -94,7 +94,10 @@ func Example_Marshal() {
 
 ### Custom decoding/encoding
 
-To avoid reflection overhead to can define you custom encoder and decoder 
+To avoid reflection overhead you can define a custom [encoder](encoder.go) and [decoder](decoder.go) 
+
+
+#### Struct coder
 
 ```go
 //EncodeBinary encodes data from binary stream
@@ -118,9 +121,136 @@ func (e *Employee) DecodeBinary(stream *bintly.Reader) error {
 }
 ```
 
-### Slice coder
+#### Slice coder
 
-### Map coder
+```go
+type Employees []*Employee
+
+func (e *Employees) DecodeBinary(stream *bintly.Reader) error {
+	size := int(stream.Alloc())
+	if size == bintly.NilSize {
+		return nil
+	}
+	for i := 0;i< size;i++ {
+		if err := stream.Any((*e)[i]);err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (e *Employees) EncodeBinary(stream *bintly.Writer) error {
+	if *e == nil {
+		stream.Alloc(bintly.NilSize)
+		return nil
+	}
+	stream.Alloc(int32(len(*e)))
+	for i := range *e {
+		if err := stream.Any((*e)[i]);err != nil {
+			return nil
+		}
+	}	
+	return nil
+}
+
+func Example_Slice_Unmarshal() {
+    emps := Employees{
+		{
+			ID:       1,
+			Name:     "test 1",
+			RolesIDs: []int{1000, 1002, 1003},
+			Titles:   []string{"Lead", "Principal"},
+			DeptIDs:  []int{10, 13},
+		},
+		{
+			ID:       2,
+			Name:     "test 2",
+			RolesIDs: []int{1000, 1002, 1003},
+			Titles:   []string{"Lead", "Principal"},
+			DeptIDs:  []int{10, 13},
+		},
+	}
+	
+	data, err := bintly.Marshal(&emps) //pass pointer to the slice
+	if err != nil {
+		log.Fatal(err)
+	}
+	var clone Employees
+	err = bintly.Unmarshal(data, &clone)
+	if err != nil {
+		log.Fatal(err)
+	}
+```
+
+#### Map coder
+
+```go
+type EmployeesMap map[int]Employee
+
+func (e *EmployeesMap) DecodeBinary(stream *bintly.Reader) error {
+	size := int(stream.Alloc())
+	if size == bintly.NilSize {
+		return nil
+	}
+	*e = make(map[int]Employee, size)
+	for i := 0; i < size; i++ {
+		var k string
+		var v Employee
+		if err := stream.Any(&k); err != nil {
+			return err
+		}
+		if err := stream.Any(&v); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (e *EmployeesMap) EncodeBinary(stream *bintly.Writer) error {
+	if *e == nil {
+		stream.Alloc(bintly.NilSize)
+		return nil
+	}
+	stream.Alloc(int32(len(*e)))
+	for k, v := range *e {
+		if err := stream.Any(k); err != nil {
+			return nil
+		}
+		if err := stream.Any(v); err != nil {
+			return nil
+		}
+	}
+	return nil
+}
+
+func Example_Map_Unmarshal() {
+	emps := EmployeesMap{
+		1:{
+			ID:       1,
+			Name:     "test 1",
+			RolesIDs: []int{1000, 1002, 1003},
+			Titles:   []string{"Lead", "Principal"},
+			DeptIDs:  []int{10, 13},
+		},
+		2:{
+			ID:       2,
+			Name:     "test 2",
+			RolesIDs: []int{1000, 1002, 1003},
+			Titles:   []string{"Lead", "Principal"},
+			DeptIDs:  []int{10, 13},
+		},
+	}
+	data, err := bintly.Marshal(&emps) //pass pointer to the map
+	if err != nil {
+		log.Fatal(err)
+	}
+	var clone EmployeesMap
+	err = bintly.Unmarshal(data, &clone)
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+```
 
 
 ### Bugs

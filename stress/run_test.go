@@ -77,10 +77,8 @@ func BenchmarkUnmarshalBintly(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		c1 := BenchStruct{}
 		err = bintly.Unmarshal(data, &c1)
-		if err != nil {
-			assert.Nil(b, err)
-		}
 	}
+	assert.Nil(b, err)
 }
 
 func BenchmarkMarshalBintly(b *testing.B) {
@@ -99,10 +97,9 @@ func BenchmarkUnmarshalBintlyReflect(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		var b1 BenchStructAlias
 		err = bintly.Unmarshal(data, &b1)
-		if err != nil {
-			assert.Nil(b, err)
-		}
+
 	}
+	assert.Nil(b, err)
 }
 
 func BenchmarkMarshalBintlyReflect(b *testing.B) {
@@ -128,9 +125,11 @@ func BenchmarkUnmarshalBinary(b *testing.B) {
 
 func BenchmarkMarshalBinary(b *testing.B) {
 	b.ReportAllocs()
+	var err error
 	for i := 0; i < b.N; i++ {
-		_, _ = b1.ToBytes()
+		_, err = b1.ToBytes()
 	}
+	assert.Nil(b, err)
 }
 
 func BenchmarkUnMarshalGob(b *testing.B) {
@@ -146,24 +145,23 @@ func BenchmarkUnMarshalGob(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		c1 := BenchStruct{}
 		dec := gob.NewDecoder(bytes.NewReader(data))
-		err := dec.Decode(&c1)
-		if err != nil {
-			assert.NotNil(b, err)
-		}
+		err = dec.Decode(&c1)
+
 	}
+	assert.Nil(b, err, err)
 }
 
 func BenchmarkMarshalGob(b *testing.B) {
 	var buf bytes.Buffer
 	b.ResetTimer()
 	b.ReportAllocs()
+	var err error
 	for i := 0; i < b.N; i++ {
 		enc := gob.NewEncoder(&buf)
-		err := enc.Encode(b1)
-		if err != nil {
-			assert.NotNil(b, err)
-		}
+		err = enc.Encode(b1)
+
 	}
+	assert.Nil(b, err)
 }
 
 func BenchmarkUnmarshalCbor(b *testing.B) {
@@ -175,15 +173,18 @@ func BenchmarkUnmarshalCbor(b *testing.B) {
 	b.ReportAllocs()
 	for i := 0; i < b.N; i++ {
 		c1 := BenchStruct{}
-		cbor.Unmarshal(data, &c1)
+		err = cbor.Unmarshal(data, &c1)
 	}
+	assert.Nil(b, err)
 }
 
 func BenchmarkMarshalCbor(b *testing.B) {
 	b.ReportAllocs()
+	var err error
 	for i := 0; i < b.N; i++ {
-		_, _ = cbor.Marshal(b1)
+		_, err = cbor.Marshal(b1)
 	}
+	assert.Nil(b, err)
 }
 
 func BenchmarkUnmarshalMsgPack(b *testing.B) {
@@ -193,17 +194,21 @@ func BenchmarkUnmarshalMsgPack(b *testing.B) {
 	}
 	b.ResetTimer()
 	b.ReportAllocs()
+
 	for i := 0; i < b.N; i++ {
 		c1 := BenchStruct{}
-		msgpack.Unmarshal(data, &c1)
+		err = msgpack.Unmarshal(data, &c1)
 	}
+	assert.Nil(b, err)
 }
 
 func BenchmarkMarshalMsgPack(b *testing.B) {
 	b.ReportAllocs()
+	var err error
 	for i := 0; i < b.N; i++ {
-		_, _ = msgpack.Marshal(b1)
+		_, err = msgpack.Marshal(b1)
 	}
+	assert.Nil(b, err)
 }
 
 func BenchmarkJSONUnmarshal(b *testing.B) {
@@ -214,14 +219,15 @@ func BenchmarkJSONUnmarshal(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		c1 := BenchStruct{}
 		err = json.Unmarshal(data, &c1)
-		if err != nil {
-			assert.Nil(b, err)
-		}
 	}
+	assert.Nil(b, err)
+
 }
 func BenchmarkJSONMarshal(b *testing.B) {
 	b.ReportAllocs()
+	var err error
 	for i := 0; i < b.N; i++ {
-		_, _ = json.Marshal(b1)
+		_, err = json.Marshal(b1)
 	}
+	assert.Nil(b, err)
 }

@@ -30,7 +30,7 @@ type structCoder struct {
 
 func (c *structCoder) Alloc() int32 {
 	if c.isNil {
-		return -1
+		return NilSize
 	}
 	return 1
 }
@@ -187,7 +187,7 @@ func (c *sliceCoder) set(v reflect.Value, t reflect.Type) {
 //Alloc returns slice size
 func (c *sliceCoder) Alloc() int32 {
 	if c.isNil {
-		return -1
+		return NilSize
 	}
 	return int32(c.v.Len())
 }
@@ -263,7 +263,7 @@ func (c *mapCoder) set(v reflect.Value, t reflect.Type) {
 //Alloc returns slice size
 func (c *mapCoder) Alloc() int32 {
 	if c.v.IsNil() {
-		return -1
+		return NilSize
 	}
 	c.iter = c.v.MapRange()
 	return int32(c.v.Len())

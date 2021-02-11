@@ -8,4 +8,6 @@ const (
 	size32bitsInBytes = 4
 	size16bitsInBytes = 2
 	size8bitsInBytes  = 1
+	//represents nil size
+	NilSize = -1
 )

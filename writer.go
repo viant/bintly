@@ -473,7 +473,7 @@ func (w *Writer) Coder(v Encoder) error {
 
 	w.alloc.Int32(size)
 	switch size {
-	case -1, 0:
+	case NilSize, 0:
 		return nil
 	case 1:
 		return v.EncodeBinary(w)

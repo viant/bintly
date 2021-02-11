@@ -2,6 +2,7 @@ package bintly
 
 //Encoder defines an encoder interface
 type Encoder interface {
+	//EncodeBinary writes data to the stream
 	EncodeBinary(stream *Writer) error
 }
 

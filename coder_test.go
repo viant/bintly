@@ -129,3 +129,86 @@ func TestStructCoder_DecodeBinary(t *testing.T) {
 	}
 
 }
+
+func Test_CustomSlice(t *testing.T) {
+	var aSlice = customSlice{"a", "b", "c"}
+	data, err := Marshal(&aSlice)
+	assert.Nil(t, err)
+	var clone customSlice
+	err = Unmarshal(data, &clone)
+	assert.Nil(t, err)
+	assert.EqualValues(t, clone, aSlice)
+}
+
+type customSlice []string
+
+//DecodeBinary decodes data to binary stream
+func (e *customSlice) DecodeBinary(stream *Reader) error {
+	size := int(stream.Alloc())
+	if size == NilSize {
+		return nil
+	}
+	*e = make([]string, size)
+	for i := 0; i < size; i++ {
+		item := ""
+		stream.String(&item)
+		(*e)[i] = item
+	}
+	return nil
+}
+
+//EncodeBinary encodes data from binary stream
+func (e *customSlice) EncodeBinary(stream *Writer) error {
+	if *e == nil {
+		stream.Alloc(NilSize)
+		return nil
+	}
+	stream.Alloc(int32(len(*e)))
+	for i := range *e {
+		stream.String((*e)[i])
+	}
+	return nil
+}
+
+func Test_CustomMap(t *testing.T) {
+	var aMap = customMap{"a": 1, "b": 2, "c": 3}
+	data, err := Marshal(&aMap)
+	assert.Nil(t, err)
+	var clone customMap
+	err = Unmarshal(data, &clone)
+	assert.Nil(t, err)
+	assert.EqualValues(t, clone, aMap)
+}
+
+type customMap map[string]int
+
+//DecodeBinary decodes data to binary stream
+func (e *customMap) DecodeBinary(stream *Reader) error {
+	size := int(stream.Alloc())
+	if size == NilSize {
+		return nil
+	}
+	*e = make(map[string]int, size)
+	for i := 0; i < size; i++ {
+		var key string
+		var val int
+		stream.String(&key)
+		stream.Int(&val)
+		(*e)[key] = val
+	}
+	return nil
+}
+
+//EncodeBinary encodes data from binary stream
+func (e *customMap) EncodeBinary(stream *Writer) error {
+	if *e == nil {
+		stream.Alloc(NilSize)
+		return nil
+	}
+	stream.Alloc(int32(len(*e)))
+	for k, v := range *e {
+		stream.String(k)
+		stream.Int(v)
+	}
+	return nil
+}

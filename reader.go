@@ -578,7 +578,7 @@ func (r *Reader) Coder(coder Decoder) error {
 		allocator.SetAlloc(size)
 	}
 	switch size {
-	case -1, 0:
+	case NilSize, 0:
 		return nil
 	case 1:
 		return coder.DecodeBinary(r)
@@ -648,8 +648,6 @@ func (r *Reader) anyReflect(v interface{}) error {
 		defer sliceCoders.Put(coder)
 		coder.set(value, rawType)
 		return r.Coder(coder)
-
-		//TODO add support for an arbitrary slice
 	default:
 		//handles natives type aliases
 		if nativeType := conv.MatchNative(rawType); nativeType != nil {
