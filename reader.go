@@ -11,7 +11,7 @@ import (
 type (
 	//Reader represents binary readers
 	Reader struct {
-		decAlloc decUint32s
+		decAlloc decInt32s
 		decInts
 		decUints
 		decInt64s
@@ -142,7 +142,7 @@ func (r *Reader) Any(v interface{}) error {
 }
 
 //Alloc shifts allocation size (for repeated or pointers(nil:0,1))
-func (r *Reader) Alloc() uint32 {
+func (r *Reader) Alloc() int32 {
 	alloc := r.decAlloc[0]
 	r.decAlloc = r.decAlloc[1:]
 	return alloc
@@ -578,7 +578,7 @@ func (r *Reader) Coder(coder Decoder) error {
 		allocator.SetAlloc(size)
 	}
 	switch size {
-	case 0:
+	case -1, 0:
 		return nil
 	case 1:
 		return coder.DecodeBinary(r)
@@ -608,8 +608,8 @@ func (r *Reader) FromBytes(data []byte) error {
 	offset = r.decUints.load(data, offset)
 	offset = r.decInt64s.load(data, offset)
 	offset = r.decUint64s.load(data, offset)
-	offset = r.decInt32s.load(data, offset)
-	offset = r.decUint32s.load(data, offset, codecUint32s)
+	offset = r.decInt32s.load(data, offset, codecInt32s)
+	offset = r.decUint32s.load(data, offset)
 	offset = r.decInt16s.load(data, offset)
 	offset = r.decUint16s.load(data, offset)
 	offset = r.decInt8s.load(data, offset)
@@ -639,9 +639,12 @@ func (r *Reader) anyReflect(v interface{}) error {
 		}
 		return r.Coder(coder)
 	case reflect.Map:
-		//TODO add support for an arbitrary map
+		coder := mapCoders.Get()
+		defer mapCoders.Put(coder)
+		coder.set(value, rawType)
+		return r.Coder(coder)
 	case reflect.Slice:
-		coder :=sliceCoders.Get()
+		coder := sliceCoders.Get()
 		defer sliceCoders.Put(coder)
 		coder.set(value, rawType)
 		return r.Coder(coder)
@@ -720,8 +723,8 @@ func (s *decUint64s) load(data []byte, offset int) int {
 	return offset
 }
 
-func (s *decInt32s) load(data []byte, offset int) int {
-	if data[offset] != codecInt32s {
+func (s *decInt32s) load(data []byte, offset int, codec uint8) int {
+	if data[offset] != codec {
 		return offset
 	}
 	offset += size8bitsInBytes
@@ -733,8 +736,8 @@ func (s *decInt32s) load(data []byte, offset int) int {
 	return offset
 }
 
-func (s *decUint32s) load(data []byte, offset int, codec uint8) int {
-	if data[offset] != codec {
+func (s *decUint32s) load(data []byte, offset int) int {
+	if data[offset] != codecUint32s {
 		return offset
 	}
 	offset += size8bitsInBytes

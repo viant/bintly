@@ -8,5 +8,5 @@ type Encoder interface {
 //Alloc represents repeated type allocator
 type Alloc interface {
 	//Alloc returns size of repeated type
-	Alloc() uint32
+	Alloc() int32
 }

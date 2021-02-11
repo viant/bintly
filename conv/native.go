@@ -70,4 +70,3 @@ func MatchNative(t reflect.Type) *reflect.Type {
 func IsBytesConvertibleTo(t reflect.Type) bool {
 	return t.ConvertibleTo(bytesType)
 }
-

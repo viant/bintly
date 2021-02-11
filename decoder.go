@@ -7,5 +7,5 @@ type Decoder interface {
 
 //Allocator represents repeated type allocator
 type Allocator interface {
-	SetAlloc(allocation uint32)
+	SetAlloc(allocation int32)
 }

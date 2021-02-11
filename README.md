@@ -90,6 +90,22 @@ func Example_Marshal() {
 		log.Fatal(err)
 	}
 }
+```
+
+### Custom decoding/encoding
+
+To avoid reflection overhead to can define you custom encoder and decoder 
+
+```go
+//EncodeBinary encodes data from binary stream
+func (e *Employee) EncodeBinary(stream *bintly.Writer) error {
+	stream.Int(e.ID)
+	stream.String(e.Name)
+	stream.Ints(e.RolesIDs)
+	stream.Strings(e.Titles)
+	stream.Ints(e.DeptIDs)
+	return nil
+}
 
 //DecodeBinary decodes data to binary stream
 func (e *Employee) DecodeBinary(stream *bintly.Reader) error {
@@ -100,22 +116,12 @@ func (e *Employee) DecodeBinary(stream *bintly.Reader) error {
 	stream.Ints(&e.DeptIDs)
 	return nil
 }
-
-//EncodeBinary encodes data from binary stream
-func (e *Employee) EncodeBinary(stream *bintly.Writer) error {
-	stream.Int(e.ID)
-	stream.String(e.Name)
-	stream.Ints(e.RolesIDs)
-	stream.Strings(e.Titles)
-	stream.Ints(e.DeptIDs)
-	return nil
-}
 ```
 
-#### Working with Map
+### Slice coder
 
+### Map coder
 
-#### Working with Objects
 
 ### Bugs
 

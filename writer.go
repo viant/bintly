@@ -11,7 +11,7 @@ import (
 type (
 	//Writer represents binary writer
 	Writer struct {
-		alloc encUint32s
+		alloc encInt32s
 		encInts
 		encUints
 		encInt64s
@@ -159,9 +159,12 @@ func (w *Writer) anyReflect(v interface{}) error {
 		}
 		return w.Coder(coder)
 	case reflect.Map:
-		//TODO add support for an arbitrary map
+		coder := mapCoders.Get()
+		defer mapCoders.Put(coder)
+		coder.set(value, rawType)
+		return w.Coder(coder)
 	case reflect.Slice:
-		coder :=sliceCoders.Get()
+		coder := sliceCoders.Get()
 		defer sliceCoders.Put(coder)
 		coder.set(value, rawType)
 		return w.Coder(coder)
@@ -183,199 +186,199 @@ func (w *Writer) anyReflect(v interface{}) error {
 }
 
 //Alloc append data allocation size for repeater or pointers(0,1) types
-func (w *Writer) Alloc(size uint32) {
-	w.alloc.Uint32(size)
+func (w *Writer) Alloc(size int32) {
+	w.alloc.Int32(size)
 }
 
 //IntPtr writes *int
 func (w *Writer) IntPtr(v *int) {
 	if v == nil {
-		w.alloc.Uint32(0)
+		w.alloc.Int32(0)
 		return
 	}
-	w.alloc.Uint32(1)
+	w.alloc.Int32(1)
 	w.Int(*v)
 }
 
 //Ints writes []int
 func (w *Writer) Ints(vs []int) {
-	w.alloc.Uint32(uint32(len(vs)))
+	w.alloc.Int32(int32(len(vs)))
 	w.appendInts(vs)
 }
 
 //UintPtr writes *uint
 func (w *Writer) UintPtr(v *uint) {
 	if v == nil {
-		w.alloc.Uint32(0)
+		w.alloc.Int32(0)
 		return
 	}
-	w.alloc.Uint32(1)
+	w.alloc.Int32(1)
 	w.Uint(*v)
 }
 
 //Uints writes []uint
 func (w *Writer) Uints(vs []uint) {
-	w.alloc.Uint32(uint32(len(vs)))
+	w.alloc.Int32(int32(len(vs)))
 	w.appendUints(vs)
 }
 
 //Int64Ptr writes *int64
 func (w *Writer) Int64Ptr(v *int64) {
 	if v == nil {
-		w.alloc.Uint32(0)
+		w.alloc.Int32(0)
 		return
 	}
-	w.alloc.Uint32(1)
+	w.alloc.Int32(1)
 	w.Int64(*v)
 }
 
 //Int64s writes []int64
 func (w *Writer) Int64s(vs []int64) {
-	w.alloc.Uint32(uint32(len(vs)))
+	w.alloc.Int32(int32(len(vs)))
 	w.appendInt64s(vs)
 }
 
 //Uint64Ptr writes *uint64
 func (w *Writer) Uint64Ptr(v *uint64) {
 	if v == nil {
-		w.alloc.Uint32(0)
+		w.alloc.Int32(0)
 		return
 	}
-	w.alloc.Uint32(1)
+	w.alloc.Int32(1)
 	w.Uint64(*v)
 }
 
 //Uint64s writes []uint64
 func (w *Writer) Uint64s(vs []uint64) {
-	w.alloc.Uint32(uint32(len(vs)))
+	w.alloc.Int32(int32(len(vs)))
 	w.appendUint64s(vs)
 }
 
 //Int32Ptr writes *int32
 func (w *Writer) Int32Ptr(v *int32) {
 	if v == nil {
-		w.alloc.Uint32(0)
+		w.alloc.Int32(0)
 		return
 	}
-	w.alloc.Uint32(1)
+	w.alloc.Int32(1)
 	w.Int32(*v)
 }
 
 //Int32s writes []int32
 func (w *Writer) Int32s(vs []int32) {
-	w.alloc.Uint32(uint32(len(vs)))
+	w.alloc.Int32(int32(len(vs)))
 	w.appendInt32s(vs)
 }
 
 //Uint32Ptr writes *uint32
 func (w *Writer) Uint32Ptr(v *uint32) {
 	if v == nil {
-		w.alloc.Uint32(0)
+		w.alloc.Int32(0)
 		return
 	}
-	w.alloc.Uint32(1)
+	w.alloc.Int32(1)
 	w.Uint32(*v)
 }
 
 //Uint32s writes []uint32
 func (w *Writer) Uint32s(vs []uint32) {
-	w.alloc.Uint32(uint32(len(vs)))
+	w.alloc.Int32(int32(len(vs)))
 	w.appendUint32s(vs)
 }
 
 //Int16Ptr writes *int16
 func (w *Writer) Int16Ptr(v *int16) {
 	if v == nil {
-		w.alloc.Uint32(0)
+		w.alloc.Int32(0)
 		return
 	}
-	w.alloc.Uint32(1)
+	w.alloc.Int32(1)
 	w.Int16(*v)
 }
 
 //Int16s writes []int16
 func (w *Writer) Int16s(vs []int16) {
-	w.alloc.Uint32(uint32(len(vs)))
+	w.alloc.Int32(int32(len(vs)))
 	w.appendInt16s(vs)
 }
 
 //Uint16Ptr writes *uint16
 func (w *Writer) Uint16Ptr(v *uint16) {
 	if v == nil {
-		w.alloc.Uint32(0)
+		w.alloc.Int32(0)
 		return
 	}
-	w.alloc.Uint32(1)
+	w.alloc.Int32(1)
 	w.Uint16(*v)
 }
 
 //Uint16s writes []uint16
 func (w *Writer) Uint16s(vs []uint16) {
-	w.alloc.Uint32(uint32(len(vs)))
+	w.alloc.Int32(int32(len(vs)))
 	w.appendUint16s(vs)
 }
 
 //Int8Ptr writes *int8
 func (w *Writer) Int8Ptr(v *int8) {
 	if v == nil {
-		w.alloc.Uint32(0)
+		w.alloc.Int32(0)
 		return
 	}
-	w.alloc.Uint32(1)
+	w.alloc.Int32(1)
 	w.Int8(*v)
 }
 
 //Int8s writes []int8
 func (w *Writer) Int8s(vs []int8) {
-	w.alloc.Uint32(uint32(len(vs)))
+	w.alloc.Int32(int32(len(vs)))
 	w.appendInt8s(vs)
 }
 
 //Uint8Ptr writes *uint8
 func (w *Writer) Uint8Ptr(v *uint8) {
 	if v == nil {
-		w.alloc.Uint32(0)
+		w.alloc.Int32(0)
 		return
 	}
-	w.alloc.Uint32(1)
+	w.alloc.Int32(1)
 	w.Uint8(*v)
 }
 
 //Uint8s writes []uint8
 func (w *Writer) Uint8s(vs []uint8) {
-	w.alloc.Uint32(uint32(len(vs)))
+	w.alloc.Int32(int32(len(vs)))
 	w.appendUint8s(vs)
 }
 
 //Float64Ptr writes *float64
 func (w *Writer) Float64Ptr(v *float64) {
 	if v == nil {
-		w.alloc.Uint32(0)
+		w.alloc.Int32(0)
 		return
 	}
-	w.alloc.Uint32(1)
+	w.alloc.Int32(1)
 	w.Float64(*v)
 }
 
 //Float64s writes []float64
 func (w *Writer) Float64s(vs []float64) {
-	w.alloc.Uint32(uint32(len(vs)))
+	w.alloc.Int32(int32(len(vs)))
 	w.appendFloat64s(vs)
 }
 
 //Float32Ptr writes *float32
 func (w *Writer) Float32Ptr(v *float32) {
 	if v == nil {
-		w.alloc.Uint32(0)
+		w.alloc.Int32(0)
 		return
 	}
-	w.alloc.Uint32(1)
+	w.alloc.Int32(1)
 	w.Float32(*v)
 }
 
 //Float32s writes []float32
 func (w *Writer) Float32s(vs []float32) {
-	w.alloc.Uint32(uint32(len(vs)))
+	w.alloc.Int32(int32(len(vs)))
 	w.appendFloat32s(vs)
 }
 
@@ -391,10 +394,10 @@ func (w *Writer) Bool(v bool) {
 //BoolPtr writes *bool
 func (w *Writer) BoolPtr(v *bool) {
 	if v == nil {
-		w.alloc.Uint32(0)
+		w.alloc.Int32(0)
 		return
 	}
-	w.alloc.Uint32(1)
+	w.alloc.Int32(1)
 	i := uint8(0)
 	if *v {
 		i = 1
@@ -404,7 +407,7 @@ func (w *Writer) BoolPtr(v *bool) {
 
 //Bools writes []bool
 func (w *Writer) Bools(vs []bool) {
-	w.alloc.Uint32(uint32(len(vs)))
+	w.alloc.Int32(int32(len(vs)))
 	for _, b := range vs {
 		i := uint8(0)
 		if b {
@@ -423,7 +426,7 @@ func (w *Writer) String(v string) {
 //StringPtr writes *string
 func (w *Writer) StringPtr(v *string) {
 	if v == nil {
-		w.alloc.Uint32(0)
+		w.alloc.Int32(0)
 		return
 	}
 	b := unsafeGetBytes(*v)
@@ -433,7 +436,7 @@ func (w *Writer) StringPtr(v *string) {
 //Strings writes []string
 func (w *Writer) Strings(v []string) {
 	size := len(v)
-	w.alloc.Uint32(uint32(size))
+	w.alloc.Int32(int32(size))
 	for i := range v {
 		w.String(v[i])
 	}
@@ -448,10 +451,10 @@ func (w *Writer) Time(v time.Time) {
 //TimePtr writes *time.Time
 func (w *Writer) TimePtr(v *time.Time) {
 	if v == nil {
-		w.alloc.Uint32(0)
+		w.alloc.Int32(0)
 		return
 	}
-	w.alloc.Uint32(1)
+	w.alloc.Int32(1)
 	n := v.UnixNano()
 	w.Int64(n)
 }
@@ -460,17 +463,17 @@ func (w *Writer) TimePtr(v *time.Time) {
 func (w *Writer) Coder(v Encoder) error {
 
 	if v == nil {
-		w.alloc.Uint32(0)
+		w.alloc.Int32(0)
 		return nil
 	}
-	size := uint32(1)
+	size := int32(1)
 	if allocator, ok := v.(Alloc); ok {
 		size = allocator.Alloc()
 	}
 
-	w.alloc.Uint32(size)
+	w.alloc.Int32(size)
 	switch size {
-	case 0:
+	case -1, 0:
 		return nil
 	case 1:
 		return v.EncodeBinary(w)
@@ -524,10 +527,10 @@ func (w *Writer) Bytes() []byte {
 	if offset, ok = w.encUint64s.store(data, offset); ok {
 		w.encUint64s = w.encUint64s[:0]
 	}
-	if offset, ok = w.encInt32s.store(data, offset); ok {
+	if offset, ok = w.encInt32s.store(data, offset, codecInt32s); ok {
 		w.encInt32s = w.encInt32s[:0]
 	}
-	if offset, ok = w.encUint32s.store(data, offset, codecUint32s); ok {
+	if offset, ok = w.encUint32s.store(data, offset); ok {
 		w.encUint32s = w.encUint32s[:0]
 	}
 	if offset, ok = w.encInt16s.store(data, offset); ok {
@@ -672,12 +675,12 @@ func (s *encInt32s) appendInt32s(v []int32) {
 	*s = append(*s, v...)
 }
 
-func (s *encInt32s) store(data []byte, offset int) (int, bool) {
+func (s *encInt32s) store(data []byte, offset int, codec uint8) (int, bool) {
 	size := len(*s)
 	if size == 0 {
 		return offset, false
 	}
-	data[offset] = codecInt32s
+	data[offset] = codec
 	offset += size8bitsInBytes
 	PutUint32(data[offset:], uint32(size))
 	offset += size32bitsInBytes
@@ -702,12 +705,12 @@ func (s *encUint32s) appendUint32s(v []uint32) {
 	*s = append(*s, v...)
 }
 
-func (s *encUint32s) store(data []byte, offset int, codec uint8) (int, bool) {
+func (s *encUint32s) store(data []byte, offset int) (int, bool) {
 	size := len(*s)
 	if size == 0 {
 		return offset, false
 	}
-	data[offset] = codec
+	data[offset] = codecUint32s
 	offset += size8bitsInBytes
 	PutUint32(data[offset:], uint32(size))
 	offset += size32bitsInBytes
