@@ -10,6 +10,7 @@ Please refer to [`CHANGELOG.md`](CHANGELOG.md) if you encounter breaking changes
 - [Motivation](#motivation)
 - [Introduction](#introduction)
 - [Usage](#usage)
+- [Custom encoding/decoding](#custom-encodingdecoding)
 - [Bugs](#bugs)
 - [Contribution](#contributing-to-bintly)
 - [License](#license)
@@ -92,10 +93,9 @@ func Example_Marshal() {
 }
 ```
 
-### Custom decoding/encoding
+### Custom encoding/decoding
 
 To avoid reflection overhead you can define a custom [encoder](encoder.go) and [decoder](decoder.go) 
-
 
 #### Struct coder
 
