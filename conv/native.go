@@ -66,77 +66,8 @@ func MatchNative(t reflect.Type) *reflect.Type {
 	return nil
 }
 
-//IsIntConvertibleTo return true if int convertibleTo
-func IsIntConvertibleTo(t reflect.Type) bool {
-	return t.ConvertibleTo(intType)
-}
-
-//IsUintConvertibleTo return true if uint convertibleTo
-func IsUintConvertibleTo(t reflect.Type) bool {
-	return t.ConvertibleTo(uintType)
-}
-
-//IsInt64ConvertibleTo return true if int64 convertibleTo
-func IsInt64ConvertibleTo(t reflect.Type) bool {
-	return t.ConvertibleTo(int64Type)
-}
-
-//IsUint64ConvertibleTo return true if uint64 convertibleTo
-func IsUint64ConvertibleTo(t reflect.Type) bool {
-	return t.ConvertibleTo(uint64Type)
-}
-
-//IsInt32ConvertibleTo return true if int32 convertibleTo
-func IsInt32ConvertibleTo(t reflect.Type) bool {
-	return t.ConvertibleTo(int32Type)
-}
-
-//IsUint32ConvertibleTo return true if uint32 convertibleTo
-func IsUint32ConvertibleTo(t reflect.Type) bool {
-	return t.ConvertibleTo(uint32Type)
-}
-
-//IsInt16ConvertibleTo return true if int16 convertibleTo
-func IsInt16ConvertibleTo(t reflect.Type) bool {
-	return t.ConvertibleTo(int16Type)
-}
-
-//IsUint16ConvertibleTo return true if uint16 convertibleTo
-func IsUint16ConvertibleTo(t reflect.Type) bool {
-	return t.ConvertibleTo(uint16Type)
-}
-
-//IsInt8ConvertibleTo return true if int16 convertibleTo
-func IsInt8ConvertibleTo(t reflect.Type) bool {
-	return t.ConvertibleTo(int8Type)
-}
-
-//IsUint8ConvertibleTo return true if uint16 convertibleTo
-func IsUint8ConvertibleTo(t reflect.Type) bool {
-	return t.ConvertibleTo(uint8Type)
-}
-
-//IsFloat64ConvertibleTo return true if float64 convertibleTo
-func IsFloat64ConvertibleTo(t reflect.Type) bool {
-	return t.ConvertibleTo(float64Type)
-}
-
-//IsFloat32ConvertibleTo return true if float32 convertibleTo
-func IsFloat32ConvertibleTo(t reflect.Type) bool {
-	return t.ConvertibleTo(float32Type)
-}
-
-//IsBoolConvertibleTo return true if bool convertibleTo
-func IsBoolConvertibleTo(t reflect.Type) bool {
-	return t.ConvertibleTo(boolType)
-}
-
 //IsByteConvertibleTo return true if []byte ConvertibleTo
 func IsBytesConvertibleTo(t reflect.Type) bool {
 	return t.ConvertibleTo(bytesType)
 }
 
-//IsStringConvertibleTo return true if string ConvertibleTo
-func IsStringConvertibleTo(t reflect.Type) bool {
-	return t.ConvertibleTo(stringType)
-}
