@@ -21,6 +21,7 @@ var int8Slice = make([]int8, testSize)
 var float64Slice = make([]float64, testSize)
 var float32Slice = make([]float32, testSize)
 var stringSlice = make([]string, testSize)
+var boolSlice = make([]bool, testSize)
 
 func init() {
 	rand.Seed(time.Now().UnixNano())

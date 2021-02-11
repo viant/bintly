@@ -9,7 +9,8 @@ import (
 )
 
 func TestCodec_Put(t *testing.T) {
-
+	type myInt int
+	mI := myInt(333)
 	var tBool = true
 	var text = "testMe"
 	var ts = time.Now()
@@ -173,6 +174,10 @@ func TestCodec_Put(t *testing.T) {
 			value:       &tBool,
 		},
 		{
+			description: "[]bool type",
+			value:       []bool{true, false, true},
+		},
+		{
 			description: "[]byte type",
 			value:       []byte(uint8Slice),
 		},
@@ -196,6 +201,14 @@ func TestCodec_Put(t *testing.T) {
 		{
 			description: "*time.Time",
 			value:       &ts,
+		},
+		{
+			description: "myInt native type",
+			value:       myInt(101),
+		},
+		{
+			description: "*myInt native type",
+			value:       &mI,
 		},
 	}
 

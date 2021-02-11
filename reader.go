@@ -2,6 +2,7 @@ package bintly
 
 import (
 	"fmt"
+	"github.com/viant/bintly/conv"
 	"reflect"
 	"sync"
 	"time"
@@ -118,6 +119,8 @@ func (r *Reader) Any(v interface{}) error {
 		r.Bool(actual)
 	case **bool:
 		r.BoolPtr(actual)
+	case *[]bool:
+		r.Bools(actual)
 	case *string:
 		r.String(actual)
 	case **string:
@@ -507,6 +510,20 @@ func (r *Reader) BoolPtr(v **bool) {
 	*v = &val
 }
 
+//Bools reads into *[]bool
+func (r *Reader) Bools(vs *[]bool) {
+	size := int(r.Alloc())
+	if size == 0 {
+		return
+	}
+	var bools = make([]bool, size)
+	for i := 0; i < size; i++ {
+		bools[i] = r.decUint8s[i] == 1
+	}
+	r.decUint8s = r.decUint8s[size:]
+	*vs = bools
+}
+
 //String reads into *string
 func (r *Reader) String(v *string) {
 	var bs []byte
@@ -558,7 +575,7 @@ func (r *Reader) TimePtr(v **time.Time) {
 func (r *Reader) Coder(coder Decoder) error {
 	size := r.Alloc()
 	if allocator, ok := coder.(Allocator); ok {
-		allocator.Alloc(size)
+		allocator.SetAlloc(size)
 	}
 	switch size {
 	case 0:
@@ -603,9 +620,14 @@ func (r *Reader) FromBytes(data []byte) error {
 }
 
 func (r *Reader) anyReflect(v interface{}) error {
-	value := reflect.ValueOf(v)
 	rawType := reflect.TypeOf(v)
-	if rawType.Kind() == reflect.Ptr {
+	if rawType.Kind() != reflect.Ptr {
+		return fmt.Errorf("expected pointer, but had:%T", v)
+	}
+	rawType = rawType.Elem()
+	value := reflect.ValueOf(v)
+	isPointer := rawType.Kind() == reflect.Ptr
+	if isPointer {
 		rawType = rawType.Elem()
 	}
 	switch rawType.Kind() {
@@ -620,6 +642,23 @@ func (r *Reader) anyReflect(v interface{}) error {
 		//TODO add support for an arbitrary map
 	case reflect.Slice:
 		//TODO add support for an arbitrary slice
+	default:
+		//handles natives type aliases
+		if nativeType := conv.MatchNative(rawType); nativeType != nil {
+			native := reflect.New(*nativeType)
+			if err := r.Any(native.Interface()); err != nil {
+				return err
+			}
+			alias := native.Elem().Convert(rawType)
+			if isPointer { //**T case
+				actual := reflect.New(rawType)
+				actual.Elem().Set(alias)
+				value.Elem().Set(actual)
+			} else {
+				value.Elem().Set(alias)
+			}
+			return nil
+		}
 	}
 	return fmt.Errorf("unsupproted readers type: %T", v)
 }

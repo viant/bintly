@@ -2,6 +2,7 @@ package bintly
 
 import (
 	"fmt"
+	"github.com/viant/bintly/conv"
 	"reflect"
 	"sync"
 	"time"
@@ -118,6 +119,9 @@ func (w *Writer) Any(v interface{}) error {
 		w.Bool(actual)
 	case *bool:
 		w.BoolPtr(actual)
+	case []bool:
+		w.Bools(actual)
+
 	case string:
 		w.String(actual)
 	case *string:
@@ -139,9 +143,11 @@ func (w *Writer) Any(v interface{}) error {
 }
 
 func (w *Writer) anyReflect(v interface{}) error {
+
 	value := reflect.ValueOf(v)
 	rawType := reflect.TypeOf(v)
-	if rawType.Kind() == reflect.Ptr {
+	isPointer := rawType.Kind() == reflect.Ptr
+	if isPointer {
 		rawType = rawType.Elem()
 	}
 	switch rawType.Kind() {
@@ -155,7 +161,18 @@ func (w *Writer) anyReflect(v interface{}) error {
 	case reflect.Map:
 		//TODO add support for an arbitrary map
 	case reflect.Slice:
-		//TODO add support for an arbitrary slice
+	//TODO add support for an arbitrary slice
+	default:
+
+		//handles natives type aliases
+		if nativeType := conv.MatchNative(rawType); nativeType != nil {
+			if isPointer {
+				return w.Any(value.Elem().Convert(*nativeType).Interface())
+			} else {
+				return w.Any(value.Convert(*nativeType).Interface())
+			}
+		}
+
 	}
 	return fmt.Errorf("unsupproted writer type: %T", v)
 }
@@ -380,6 +397,18 @@ func (w *Writer) BoolPtr(v *bool) {
 	w.Uint8(i)
 }
 
+//Bools writes []bool
+func (w *Writer) Bools(vs []bool) {
+	w.alloc.Uint32(uint32(len(vs)))
+	for _, b := range vs {
+		i := uint8(0)
+		if b {
+			i = 1
+		}
+		w.Uint8(i)
+	}
+}
+
 //String writes string
 func (w *Writer) String(v string) {
 	b := unsafeGetBytes(v)
@@ -424,6 +453,7 @@ func (w *Writer) TimePtr(v *time.Time) {
 
 //Coder encodes data with encoder
 func (w *Writer) Coder(v Encoder) error {
+
 	if v == nil {
 		w.alloc.Uint32(0)
 		return nil
@@ -432,6 +462,7 @@ func (w *Writer) Coder(v Encoder) error {
 	if allocator, ok := v.(Alloc); ok {
 		size = allocator.Alloc()
 	}
+
 	w.alloc.Uint32(size)
 	switch size {
 	case 0:
@@ -446,7 +477,6 @@ func (w *Writer) Coder(v Encoder) error {
 	}
 	return nil
 }
-
 
 //Size returns data size
 func (w *Writer) Size() int {

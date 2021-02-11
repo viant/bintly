@@ -23,30 +23,29 @@ var b1 = BenchStruct{
 	A8: uint8Slice,
 }
 
-
 func Test_BenchStruct(t *testing.T) {
 
-	{//test custom binary
+	{ //test custom binary
 		data, err := b1.ToBytes()
 		assert.Nil(t, err)
 		clone := BenchStruct{}
 		clone.FromBytes(data)
 		assert.EqualValues(t, clone, b1)
 	}
-	{//test custom bintly
+	{ //test custom bintly
 		data, err := bintly.Marshal(&b1)
 		assert.Nil(t, err)
 		clone := BenchStruct{}
 		err = bintly.Unmarshal(data, &clone)
 		assert.EqualValues(t, clone, b1)
 	}
-	{//test bintly reflect
+	{ //test bintly reflect
 		alias := BenchStructAlias(b1)
 		data, err := bintly.Marshal(&alias)
 		assert.Nil(t, err)
 		clone := BenchStructAlias{}
 		err = bintly.Unmarshal(data, &clone)
-		assert.EqualValues(t, clone, b1)
+		assert.EqualValues(t, clone, alias)
 	}
 	{ //test gob
 		var buf bytes.Buffer
@@ -59,7 +58,7 @@ func Test_BenchStruct(t *testing.T) {
 		assert.Nil(t, err)
 		assert.EqualValues(t, b1, clone)
 	}
-	{//test cobr reflect
+	{ //test cobr reflect
 		alias := BenchStructAlias(b1)
 		data, err := cbor.Marshal(&alias)
 		assert.Nil(t, err)
@@ -92,7 +91,7 @@ func BenchmarkMarshalBintly(b *testing.B) {
 }
 
 func BenchmarkUnmarshalBintlyReflect(b *testing.B) {
-	var a1  = BenchStructAlias(b1)
+	var a1 = BenchStructAlias(b1)
 	data, err := bintly.Marshal(&a1)
 	assert.Nil(b, err)
 	b.ResetTimer()
@@ -107,7 +106,7 @@ func BenchmarkUnmarshalBintlyReflect(b *testing.B) {
 }
 
 func BenchmarkMarshalBintlyReflect(b *testing.B) {
-	var a1  = BenchStructAlias(b1)
+	var a1 = BenchStructAlias(b1)
 	b.ResetTimer()
 	b.ReportAllocs()
 	var err error
@@ -133,7 +132,6 @@ func BenchmarkMarshalBinary(b *testing.B) {
 		_, _ = b1.ToBytes()
 	}
 }
-
 
 func BenchmarkUnMarshalGob(b *testing.B) {
 	var buf bytes.Buffer
@@ -207,7 +205,6 @@ func BenchmarkMarshalMsgPack(b *testing.B) {
 		_, _ = msgpack.Marshal(b1)
 	}
 }
-
 
 func BenchmarkJSONUnmarshal(b *testing.B) {
 	data, err := json.Marshal(b1)
