@@ -18,3 +18,18 @@ func MarshalStream(stream *Writer, v interface{}) ([]byte, error) {
 	bs := stream.Bytes()
 	return bs, nil
 }
+
+
+
+
+//Encode converts encoder into []byte, or error
+func Encode(coder Encoder) ([]byte, error) {
+	stream := writers.Get()
+	err := stream.Coder(coder)
+	if err != nil {
+		return nil, err
+	}
+	bs := stream.Bytes()
+	writers.Put(stream)
+	return bs, nil
+}

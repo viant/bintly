@@ -22,3 +22,19 @@ func UnmarshalStream(stream *Reader, data []byte, v interface{}) error {
 
 	return nil
 }
+
+
+
+
+//Decode converts []byte to decoder or error
+func Decode(data []byte, coder Decoder) error {
+	stream := readers.Get()
+	err := stream.FromBytes(data)
+	if err != nil {
+		return err
+	}
+	if err = stream.Coder(coder);err == nil {
+		readers.Put(stream)
+	}
+	return err
+}
