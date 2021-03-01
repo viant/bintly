@@ -9,19 +9,6 @@ import (
 const (
 	decodeBaseType = iota
 	encodeBaseType
-	//decodeBaseTypeSlice
-	//encodeBaseTypeSlice
-	//decodeRawType
-	//encodeRawType
-	//decodeStruct
-	//encodeStruct
-	//decodeStructSlice
-	//encodeStructSlice
-	//decodeTime
-	//encodeTime
-	//decodeUnknown
-	//encodeUnknown
-//	resetFieldValue
 )
 
 //// EncodeBinary implements fast binary serialization
@@ -48,22 +35,14 @@ const (
 //	enc.Ints(p.SiteList)
 //	return nil
 
-
 var fieldTemplate = map[int]string{
-	encodeBaseType : `enc.{{.Type}}(p.{{.Var}})`,
+	encodeBaseType: `enc.{{.Type}}(p.{{.Var}})`,
 	decodeBaseType: `enc.{{.Type}}(&p.{{.Var}})`,
-
 }
 
 const (
 	fileCode = iota
 	encodingStructType
-	baseTypeSlice
-	structTypeSlice
-	resetStruct
-	poolVar
-	poolInit
-	embeddedStructInit
 )
 
 var blockTemplate = map[int]string{
@@ -72,14 +51,14 @@ package {{.Pkg}}
 
 import (
 {{.Imports}}
+"github.com/viant/bintly"
 )
 {{.Code}}
 
 `,
 	encodingStructType: `
 
-//MarshalJSONObject implements MarshalerJSONObject
-func ({{.Receiver}}) MarshalJSONObject(enc *gojay.Encoder) {
+func ({{.Receiver}}) EncodeBinary(stream *bintly.Writer) error {
 {{.EncodingCases}}
 }
 
@@ -88,8 +67,7 @@ func ({{.Receiver}}) IsNil() bool {
     return {{.Alias}} == nil
 }
 
-// UnmarshalJSONObject implements gojay's UnmarshalerJSONObject
-func ({{.Receiver}}) UnmarshalJSONObject(dec *gojay.Decoder, k string) error {
+func ({{.Receiver}}) DecodeBinary(stream *bintly.Reader) error {
 {{.InitEmbedded}}
 	switch k {
 {{.DecodingCases}}	
@@ -103,78 +81,7 @@ func ({{.Receiver}}) NKeys() int { return {{.FieldCount}} }
 {{.Reset}}
 
 `,
-
-	baseTypeSlice: `
-
-type {{.HelperType}} {{.RawType}}
-
-//UnmarshalJSONArray decodes JSON array elements into slice
-func (a *{{.HelperType}}) UnmarshalJSONArray(dec *gojay.Decoder) error {
-	var value {{.ComponentType}}
-	if err := dec.{{.DecodingMethod}}(&value); err != nil {
-		return err
-	}
-	*a = append(*a, {{.ComponentInitModifier}}value)
-	return nil
 }
-
-//MarshalJSONArray encodes arrays into JSON
-func (a {{.HelperType}}) MarshalJSONArray(enc *gojay.Encoder) {
-	for _, item := range a {
-		enc.{{.EncodingMethod}}({{.ComponentDereferenceModifier}}item)
-	}
-}
-
-//IsNil checks if array is nil
-func (a {{.HelperType}}) IsNil() bool {
-	return len(a) == 0
-}
-`,
-
-	structTypeSlice: `
-type {{.HelperType}} {{.RawType}}
-
-func (s *{{.HelperType}}) UnmarshalJSONArray(dec *gojay.Decoder) error {
-	var value = {{.ComponentInit}}
-	if err := dec.Object({{.ComponentPointerModifier}}value); err != nil {
-		return err
-	}
-	*s = append(*s, value)
-	return nil
-}
-
-func (s {{.HelperType}})  MarshalJSONArray(enc *gojay.Encoder) {
-	for i  := range s {
-		enc.Object({{.ComponentPointerModifier}}s[i])
-	}
-}
-
-
-func (s {{.HelperType}})  IsNil() bool {
-	return len(s) == 0
-}
-
-
-`,
-
-	resetStruct: `
-// Reset reset fields 
-func ({{.Receiver}}) Reset()  {
-{{.Reset}}
-}
-`,
-
-	poolVar: `var {{.PoolName}} *sync.Pool`,
-	poolInit: `	{{.PoolName}} = &sync.Pool {
-		New: func()interface{} {
-			return &{{.Type}}{}
-		},
-	}`,
-	embeddedStructInit: `if {{.Accessor}} == nil { 
-		{{.Accessor}} = {{.Init}}
-	}`,
-}
-
 
 func expandTemplate(namespace string, dictionary map[int]string, key int, data interface{}) (string, error) {
 	var id = fmt.Sprintf("%v_%v", namespace, key)
@@ -198,7 +105,3 @@ func expandFieldTemplate(key int, data interface{}) (string, error) {
 func expandBlockTemplate(key int, data interface{}) (string, error) {
 	return expandTemplate("blockTemplate", blockTemplate, key, data)
 }
-
-
-
-

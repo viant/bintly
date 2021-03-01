@@ -1,6 +1,7 @@
 package basic_struct
 
 type Message struct {
+	I  *[]string
 	A1 int
 	B1 *int
 	C1 []int

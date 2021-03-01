@@ -27,6 +27,14 @@ func (g *Generator) Generate() error {
 	if err != nil {
 		return err
 	}
+
+	// then we generate code for the types given
+	for _, rootType := range g.options.Types {
+		if err := g.generateStructCode(rootType); err != nil {
+			return err
+		}
+	}
+
 	return nil
 
 }
@@ -59,4 +67,8 @@ func (g *Generator) readPackageCode() error {
 	}
 
 	return err
+}
+
+func (g *Generator) generateStructCode(rootType string) error {
+	return nil
 }
