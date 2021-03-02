@@ -1,36 +1,27 @@
 package codegen
 
 import (
+	"fmt"
 	"github.com/viant/toolbox"
-	"os"
-	"path/filepath"
+	"strings"
 )
 
-type Generator struct {
-	fileInfo *toolbox.FileSetInfo
-	options  *Options
-	Pkg      string
-}
+type fieldGenerator func(session *session, field *toolbox.FieldInfo) (string, error)
 
-func New(options *Options) *Generator {
+func Generate(options *Options) error {
 
-	return &Generator{
-		options: options,
-	}
-}
-
-func (g *Generator) Generate() error {
-	if err := g.options.Validate(); err != nil {
+	if err := options.Validate(); err != nil {
 		return err
 	}
-	err := g.readPackageCode()
+	session := newSession(options)
+	err := session.readPackageCode()
 	if err != nil {
 		return err
 	}
 
 	// then we generate code for the types given
-	for _, rootType := range g.options.Types {
-		if err := g.generateStructCode(rootType); err != nil {
+	for _, rootType := range options.Types {
+		if err := generateStructCoding(session, rootType); err != nil {
 			return err
 		}
 	}
@@ -39,36 +30,82 @@ func (g *Generator) Generate() error {
 
 }
 
-func (g *Generator) readPackageCode() error {
-	p, err := filepath.Abs(g.options.Source)
+func generateStructCoding(session *session, typeName string) error {
+	if ok := session.shallGenerateCode(typeName); !ok {
+		return nil
+	}
+	enc, err := generateStructEncoding(session, typeName)
 	if err != nil {
 		return err
 	}
-
-	var f os.FileInfo
-	if f, err = os.Stat(p); err != nil {
-		// path/to/whatever does not exist
+	dec, err := generateStructDecoding(session, typeName)
+	if err != nil {
 		return err
 	}
-
-	if !f.IsDir() {
-		g.Pkg = filepath.Dir(p)
-		dir, _ := filepath.Split(p)
-		g.fileInfo, err = toolbox.NewFileSetInfo(dir)
-
-	} else {
-		g.Pkg = filepath.Base(p)
-		g.fileInfo, err = toolbox.NewFileSetInfo(p)
+	receiver := strings.ToLower(typeName[0:1]) + " *" + typeName
+	code, err := expandBlockTemplate(codingStructType, struct {
+		Receiver      string
+		EncodingCases string
+		DecodingCases string
+	}{receiver, enc, dec})
+	if err != nil {
+		return err
 	}
-
-	// if Pkg flag is set use it
-	if g.options.Pkg != "" {
-		g.Pkg = g.options.Pkg
-	}
-
-	return err
+	session.structCodingCode = append(session.structCodingCode, code)
+	return nil
 }
 
-func (g *Generator) generateStructCode(rootType string) error {
-	return nil
+func generateStructEncoding(sess *session, typeName string) (string, error) {
+	return generateCoding(sess, typeName, encodeBaseType, func(sess *session, field *toolbox.FieldInfo) (string, error) {
+		return "", fmt.Errorf("unsupported type: %s for field %v.%v", field.TypeName, typeName, field.Name)
+	})
+}
+
+func generateStructDecoding(sess *session, typeName string) (string, error) {
+	return generateCoding(sess, typeName, decodeBaseType, func(session *session, field *toolbox.FieldInfo) (string, error) {
+		return "", fmt.Errorf("unsupported type: %s for field %v.%v", field.TypeName, typeName, field.Name)
+	})
+
+}
+
+func generateCoding(session *session, typeName string, baseTemplate int, fn fieldGenerator) (string, error) {
+	typeInfo := session.Type(typeName)
+	if typeInfo == nil {
+		return "", fmt.Errorf("failed to lookup '%s'", typeName)
+	}
+	var codings = make([]string, 0)
+	fields := typeInfo.Fields()
+	for _, field := range fields {
+		if isBaseType(field.TypeName) {
+			method := genCodingMethod(field)
+			receiverAlias := strings.ToLower(typeName[0:1])
+			code, err := expandFieldTemplate(baseTemplate, struct {
+				Method        string
+				Field         string
+				ReceiverAlias string
+			}{method, field.Name, receiverAlias})
+			if err != nil {
+				return "", err
+			}
+			codings = append(codings, code)
+			continue
+		}
+		code, err := fn(session, field)
+		if err != nil {
+			return "", err
+		}
+		codings = append(codings, code)
+	}
+	return strings.Join(codings, "\t\n"), nil
+}
+
+func genCodingMethod(field *toolbox.FieldInfo) string {
+	codingMethod := strings.Title(field.TypeName)
+	if field.IsPointer {
+		codingMethod += "Ptr"
+	}
+	if field.IsSlice {
+		codingMethod += "s"
+	}
+	return codingMethod
 }

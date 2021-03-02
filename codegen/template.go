@@ -11,38 +11,14 @@ const (
 	encodeBaseType
 )
 
-//// EncodeBinary implements fast binary serialization
-//func (p *Profile) EncodeBinary(enc *bintly.Writer) error {
-//	enc.String(p.Key)
-//	enc.Int(p.ID)
-//	enc.String(p.RtbID)
-//	enc.String(p.StrID)
-//	enc.String(p.MobileURL)
-//	enc.String(p.SiteType)
-//	enc.String(p.Name)
-//	enc.String(p.Keywords)
-//	enc.Strings(p.Categories)
-//	enc.Time(p.Created)
-//	enc.String(p.Bundle)
-//	enc.String(p.Page)
-//	enc.String(p.Domain)
-//	enc.String(p.StoreURL)
-//	enc.String(p.RawSiteId)
-//	enc.String(p.Metadata)
-//	enc.String(p.Description)
-//	enc.String(p.Language)
-//	enc.Int(p.PublisherID)
-//	enc.Ints(p.SiteList)
-//	return nil
-
 var fieldTemplate = map[int]string{
-	encodeBaseType: `enc.{{.Type}}(p.{{.Var}})`,
-	decodeBaseType: `enc.{{.Type}}(&p.{{.Var}})`,
+	encodeBaseType: `coder.{{.Method}}({{.ReceiverAlias}}.{{.Field}})`,
+	decodeBaseType: `coder.{{.Method}}(&p.{{.Field}})`,
 }
 
 const (
 	fileCode = iota
-	encodingStructType
+	codingStructType
 )
 
 var blockTemplate = map[int]string{
@@ -56,29 +32,19 @@ import (
 {{.Code}}
 
 `,
-	encodingStructType: `
+	codingStructType: `
 
-func ({{.Receiver}}) EncodeBinary(stream *bintly.Writer) error {
+func ({{.Receiver}}) EncodeBinary(coder *bintly.Writer) error {
 {{.EncodingCases}}
-}
-
-//IsNil checks if instance is nil
-func ({{.Receiver}}) IsNil() bool {
-    return {{.Alias}} == nil
-}
-
-func ({{.Receiver}}) DecodeBinary(stream *bintly.Reader) error {
-{{.InitEmbedded}}
-	switch k {
-{{.DecodingCases}}	
-	}
 	return nil
 }
 
-// NKeys returns the number of keys to unmarshal
-func ({{.Receiver}}) NKeys() int { return {{.FieldCount}} }
 
-{{.Reset}}
+
+func ({{.Receiver}}) DecodeBinary(coder *bintly.Reader) error {
+{{.DecodingCases}}	
+	return nil
+}
 
 `,
 }
