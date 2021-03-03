@@ -15,6 +15,9 @@ func Generate(options *Options) error {
 		return err
 	}
 	session := newSession(options)
+
+	//
+	session.addImport("github.com/viant/bintly")
 	err := session.readPackageCode()
 	if err != nil {
 		return err
@@ -31,7 +34,7 @@ func Generate(options *Options) error {
 		fmt.Print(session.structCodingCode)
 		return nil
 	}
-	return ioutil.WriteFile(options.Dest, []byte(strings.Join(session.structCodingCode,"")), 0644)
+	return ioutil.WriteFile(options.Dest, []byte(strings.Join(session.structCodingCode, "")), 0644)
 
 	return nil
 
@@ -49,7 +52,9 @@ func generateStructCoding(session *session, typeName string) error {
 	if err != nil {
 		return err
 	}
+
 	receiver := strings.ToLower(typeName[0:1]) + " *" + typeName
+
 	code, err := expandBlockTemplate(codingStructType, struct {
 		Receiver      string
 		EncodingCases string
@@ -58,8 +63,14 @@ func generateStructCoding(session *session, typeName string) error {
 	if err != nil {
 		return err
 	}
+	code, err = expandBlockTemplate(fileCode, struct {
+		Pkg     string
+		Code    string
+		Imports string
+	}{session.pkg, code, session.getImports()})
+
 	session.structCodingCode = append(session.structCodingCode, code)
-//
+	//
 	return nil
 }
 
@@ -104,7 +115,7 @@ func generateCoding(session *session, typeName string, baseTemplate int, fn fiel
 		}
 		codings = append(codings, code)
 	}
-	return "\t"+strings.Join(codings, "\n\t"), nil
+	return "\t" + strings.Join(codings, "\n\t"), nil
 }
 
 func genCodingMethod(field *toolbox.FieldInfo) string {
@@ -118,9 +129,3 @@ func genCodingMethod(field *toolbox.FieldInfo) string {
 	}
 	return codingMethod
 }
-
-
-
-
-
-

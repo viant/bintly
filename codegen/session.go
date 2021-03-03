@@ -4,6 +4,7 @@ import (
 	"github.com/viant/toolbox"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 type session struct {
@@ -12,6 +13,7 @@ type session struct {
 	pkg              string
 	structCodingCode []string
 	generatedTypes   map[string]bool
+	imports          map[string]bool
 }
 
 func (s *session) shallGenerateCode(typeName string) bool {
@@ -56,5 +58,14 @@ func newSession(option *Options) *session {
 	return &session{Options: option,
 		structCodingCode: make([]string, 0),
 		generatedTypes:   make(map[string]bool),
+		imports:          make(map[string]bool),
 	}
+}
+
+func (s *session) addImport(pkg string) {
+	s.imports[`"`+pkg+`"`] = true
+}
+
+func (s *session) getImports() string {
+	return "\t" + strings.Join(toolbox.MapKeysToStringSlice(s.imports), "\n\t")
 }
