@@ -170,8 +170,9 @@ func (e *customSlice) EncodeBinary(stream *Writer) error {
 	return nil
 }
 
+
 func Test_CustomMap(t *testing.T) {
-	var aMap = customMap{"a": 1, "b": 2, "c": 3}
+	var aMap = customMap{"a": []uint32{1, 2}, "b": []uint32{2, 3}, "c": []uint32{3, 4}}
 	data, err := Marshal(&aMap)
 	assert.Nil(t, err)
 	var clone customMap
@@ -180,7 +181,7 @@ func Test_CustomMap(t *testing.T) {
 	assert.EqualValues(t, clone, aMap)
 }
 
-type customMap map[string]int
+type customMap map[string][]uint32
 
 //DecodeBinary decodes data to binary stream
 func (e *customMap) DecodeBinary(stream *Reader) error {
@@ -188,12 +189,12 @@ func (e *customMap) DecodeBinary(stream *Reader) error {
 	if size == NilSize {
 		return nil
 	}
-	*e = make(map[string]int, size)
+	*e = make(map[string][]uint32, size)
 	for i := 0; i < size; i++ {
 		var key string
-		var val int
-		stream.String(&key)
-		stream.Int(&val)
+		var val []uint32
+		stream.MString(&key)
+		stream.MUint32s(&val)
 		(*e)[key] = val
 	}
 	return nil
@@ -207,8 +208,8 @@ func (e *customMap) EncodeBinary(stream *Writer) error {
 	}
 	stream.Alloc(int32(len(*e)))
 	for k, v := range *e {
-		stream.String(k)
-		stream.Int(v)
+		stream.MString(k)
+		stream.MUint32s(v)
 	}
 	return nil
 }

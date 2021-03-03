@@ -212,6 +212,12 @@ func (w *Writer) Ints(vs []int) {
 	w.appendInts(vs)
 }
 
+//MInts writes medium size slice []int
+func (w *Writer) MInts(vs []int) {
+	w.mAlloc.Uint16(uint16(len(vs)))
+	w.appendInts(vs)
+}
+
 //UintPtr writes *uint
 func (w *Writer) UintPtr(v *uint) {
 	if v == nil {
@@ -225,6 +231,13 @@ func (w *Writer) UintPtr(v *uint) {
 //Uints writes []uint
 func (w *Writer) Uints(vs []uint) {
 	w.alloc.Int32(int32(len(vs)))
+	w.appendUints(vs)
+}
+
+
+//MUints writes []uint
+func (w *Writer) MUints(vs []uint) {
+	w.mAlloc.Uint16(uint16(len(vs)))
 	w.appendUints(vs)
 }
 
@@ -244,6 +257,12 @@ func (w *Writer) Int64s(vs []int64) {
 	w.appendInt64s(vs)
 }
 
+//MInt64s writes []int64
+func (w *Writer) MInt64s(vs []int64) {
+	w.mAlloc.Uint16(uint16(len(vs)))
+	w.appendInt64s(vs)
+}
+
 //Uint64Ptr writes *uint64
 func (w *Writer) Uint64Ptr(v *uint64) {
 	if v == nil {
@@ -259,6 +278,13 @@ func (w *Writer) Uint64s(vs []uint64) {
 	w.alloc.Int32(int32(len(vs)))
 	w.appendUint64s(vs)
 }
+
+//MUint64s writes []uint64
+func (w *Writer) MUint64s(vs []uint64) {
+	w.mAlloc.Uint16(uint16(len(vs)))
+	w.appendUint64s(vs)
+}
+
 
 //Int32Ptr writes *int32
 func (w *Writer) Int32Ptr(v *int32) {
@@ -276,6 +302,13 @@ func (w *Writer) Int32s(vs []int32) {
 	w.appendInt32s(vs)
 }
 
+//MInt32s writes []int32
+	func (w *Writer) MInt32s(vs []int32) {
+	w.mAlloc.Uint16(uint16(len(vs)))
+	w.appendInt32s(vs)
+}
+
+
 //Uint32Ptr writes *uint32
 func (w *Writer) Uint32Ptr(v *uint32) {
 	if v == nil {
@@ -291,6 +324,13 @@ func (w *Writer) Uint32s(vs []uint32) {
 	w.alloc.Int32(int32(len(vs)))
 	w.appendUint32s(vs)
 }
+
+//MUint32s writes medium size slice (upto 64k) []uint32
+func (w *Writer) MUint32s(vs []uint32) {
+	w.mAlloc.Uint16(uint16(len(vs)))
+	w.appendUint32s(vs)
+}
+
 
 //Int16Ptr writes *int16
 func (w *Writer) Int16Ptr(v *int16) {
@@ -353,6 +393,12 @@ func (w *Writer) Uint8Ptr(v *uint8) {
 //Uint8s writes []uint8
 func (w *Writer) Uint8s(vs []uint8) {
 	w.alloc.Int32(int32(len(vs)))
+	w.appendUint8s(vs)
+}
+
+//MUint8s writes medium (upto 64k) []uint8
+func (w *Writer) MUint8s(vs []uint8) {
+	w.mAlloc.Uint16(uint16(len(vs)))
 	w.appendUint8s(vs)
 }
 
@@ -432,7 +478,7 @@ func (w *Writer) String(v string) {
 //StringPtr writes *string
 func (w *Writer) StringPtr(v *string) {
 	if v == nil {
-		w.alloc.Int32(0)
+		w.alloc.Int32(NilSize)
 		return
 	}
 	b := unsafeGetBytes(*v)
@@ -445,6 +491,32 @@ func (w *Writer) Strings(v []string) {
 	w.alloc.Int32(int32(size))
 	for i := range v {
 		w.String(v[i])
+	}
+}
+
+//MString writes a medium (64k)  string
+func (w *Writer) MString(v string) {
+	b := unsafeGetBytes(v)
+	w.MUint8s(b)
+}
+
+//MStringPtr writes medium *string
+func (w *Writer) MStringPtr(v *string) {
+	if v == nil {
+		w.mAlloc.Uint16(0)
+		return
+	}
+	b := unsafeGetBytes(*v)
+	w.MUint8s(b)
+}
+
+
+//MStrings writes medium size (64k) []string
+func (w *Writer) MStrings(v []string) {
+	size := len(v)
+	w.mAlloc.Uint16(uint16(size))
+	for i := range v {
+		w.MString(v[i])
 	}
 }
 
@@ -525,6 +597,12 @@ func (w *Writer) Bytes() []byte {
 	if offset, ok = w.encUint8s.store(data, offset); ok {
 		w.encUint8s = w.encUint8s[:0]
 	}
+	if offset, ok = w.encInt32s.store(data, offset, codecInt32s); ok {
+		w.encInt32s = w.encInt32s[:0]
+	}
+	if offset, ok = w.encUint32s.store(data, offset); ok {
+		w.encUint32s = w.encUint32s[:0]
+	}
 	if offset, ok = w.encFloat32s.store(data, offset); ok {
 		w.encFloat32s = w.encFloat32s[:0]
 	}
@@ -537,12 +615,7 @@ func (w *Writer) Bytes() []byte {
 	if offset, ok = w.encUint64s.store(data, offset); ok {
 		w.encUint64s = w.encUint64s[:0]
 	}
-	if offset, ok = w.encInt32s.store(data, offset, codecInt32s); ok {
-		w.encInt32s = w.encInt32s[:0]
-	}
-	if offset, ok = w.encUint32s.store(data, offset); ok {
-		w.encUint32s = w.encUint32s[:0]
-	}
+
 	if offset, ok = w.encInt16s.store(data, offset); ok {
 		w.encInt16s = w.encInt16s[:0]
 	}

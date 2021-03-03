@@ -2,8 +2,8 @@ package bintly
 
 const (
 	codecEOF = uint8(iota)
-	codecAlloc
-	codecMAlloc
+	codecAlloc  //alloc upto 2Gb
+	codecMAlloc //medium size alloc upto 64k
 	codecInts
 	codecUints
 	codecInt64s

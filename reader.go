@@ -184,6 +184,18 @@ func (r *Reader) Ints(vs *[]int) {
 	r.decInts = r.decInts[size:]
 }
 
+
+//MInts reads medium size slice into *[]int
+func (r *Reader) MInts(vs *[]int) {
+	size := r.MAlloc()
+	if size == 0 {
+		return
+	}
+	s := r.decInts[:size]
+	*vs = s
+	r.decInts = r.decInts[size:]
+}
+
 //Uint reads into *uint
 func (r *Reader) Uint(v *uint) {
 	*v = r.decUints[0]
@@ -204,6 +216,17 @@ func (r *Reader) UintPtr(v **uint) {
 //Uints reads into *[]uint
 func (r *Reader) Uints(vs *[]uint) {
 	size := r.Alloc()
+	if size == 0 {
+		return
+	}
+	s := r.decUints[:size]
+	*vs = s
+	r.decUints = r.decUints[size:]
+}
+
+//MUints reads into *[]uint
+func (r *Reader) MUints(vs *[]uint) {
+	size := r.MAlloc()
 	if size == 0 {
 		return
 	}
@@ -240,6 +263,17 @@ func (r *Reader) Int64s(vs *[]int64) {
 	r.decInt64s = r.decInt64s[size:]
 }
 
+//MInt64s reads into *[]int64
+func (r *Reader) MInt64s(vs *[]int64) {
+	size := r.MAlloc()
+	if size == 0 {
+		return
+	}
+	s := r.decInt64s[:size]
+	*vs = s
+	r.decInt64s = r.decInt64s[size:]
+}
+
 //Uint64 reads into *uint64
 func (r *Reader) Uint64(v *uint64) {
 	*v = r.decUint64s[0]
@@ -260,6 +294,18 @@ func (r *Reader) Uint64Ptr(v **uint64) {
 //Uint64s reads into *[]uint64
 func (r *Reader) Uint64s(vs *[]uint64) {
 	size := r.Alloc()
+	if size == 0 {
+		return
+	}
+	s := r.decUint64s[:size]
+	*vs = s
+	r.decUint64s = r.decUint64s[size:]
+}
+
+
+//MUint64s reads into *[]uint64
+func (r *Reader) MUint64s(vs *[]uint64) {
+	size := r.MAlloc()
 	if size == 0 {
 		return
 	}
@@ -296,6 +342,18 @@ func (r *Reader) Int32s(vs *[]int32) {
 	r.decInt32s = r.decInt32s[size:]
 }
 
+//MInt32s reads into *[]int32
+func (r *Reader) MInt32s(vs *[]int32) {
+	size := r.MAlloc()
+	if size == 0 {
+		return
+	}
+	s := r.decInt32s[:size]
+	*vs = s
+	r.decInt32s = r.decInt32s[size:]
+}
+
+
 //Uint32 reads into *uint32
 func (r *Reader) Uint32(v *uint32) {
 	*v = r.decUint32s[0]
@@ -323,6 +381,19 @@ func (r *Reader) Uint32s(vs *[]uint32) {
 	*vs = s
 	r.decUint32s = r.decUint32s[size:]
 }
+
+
+//Uint32s reads into  *[]uint32
+func (r *Reader) MUint32s(vs *[]uint32) {
+	size := r.MAlloc()
+	if size == 0 {
+		return
+	}
+	s := r.decUint32s[:size]
+	*vs = s
+	r.decUint32s = r.decUint32s[size:]
+}
+
 
 //Int16 reads into *int16
 func (r *Reader) Int16(v *int16) {
@@ -435,6 +506,18 @@ func (r *Reader) Uint8s(vs *[]uint8) {
 	*vs = s
 	r.decUint8s = r.decUint8s[size:]
 }
+
+//MUint8s reads medium size slice (64k) into *[]uint8
+func (r *Reader) MUint8s(vs *[]uint8) {
+	size := r.MAlloc()
+	if size == 0 {
+		return
+	}
+	s := r.decUint8s[:size]
+	*vs = s
+	r.decUint8s = r.decUint8s[size:]
+}
+
 
 //Float64 reads into *float64
 func (r *Reader) Float64(v *float64) {
@@ -561,6 +644,37 @@ func (r *Reader) Strings(v *[]string) {
 	*v = strings
 }
 
+
+//MString reads into *string
+func (r *Reader) MString(v *string) {
+	var bs []byte
+	r.MUint8s(&bs)
+	s := unsafeGetString(bs)
+	*v = s
+}
+
+//MStringPtr reads into **string
+func (r *Reader) MStringPtr(v **string) {
+	var bs []byte
+	r.MUint8s(&bs)
+	s := unsafeGetString(bs)
+	*v = &s
+}
+
+//MStrings reads into *[]string
+func (r *Reader) MStrings(v *[]string) {
+	size := r.MAlloc()
+	if size == 0 {
+		return
+	}
+	var strings = make([]string, size)
+	for i := 0; i < int(size); i++ {
+		r.MString(&strings[i])
+	}
+	*v = strings
+}
+
+
 //Time reads into *time.Time
 func (r *Reader) Time(v *time.Time) {
 	n := int64(0)
@@ -610,6 +724,11 @@ func (r *Reader) FromBytes(data []byte) error {
 	if data[offset] == codecEOF {
 		return nil
 	}
+	offset = r.decInt32s.load(data, offset, codecInt32s)
+	offset = r.decUint32s.load(data, offset)
+	if data[offset] == codecEOF {
+		return nil
+	}
 	offset = r.decFloat32s.load(data, offset)
 	if data[offset] == codecEOF {
 		return nil
@@ -617,8 +736,6 @@ func (r *Reader) FromBytes(data []byte) error {
 	offset = r.decUints.load(data, offset)
 	offset = r.decInt64s.load(data, offset)
 	offset = r.decUint64s.load(data, offset)
-	offset = r.decInt32s.load(data, offset, codecInt32s)
-	offset = r.decUint32s.load(data, offset)
 	offset = r.decInt16s.load(data, offset)
 	offset = r.decUint16s.load(data, offset, codecUint16s)
 	offset = r.decInt8s.load(data, offset)
