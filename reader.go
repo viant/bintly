@@ -12,6 +12,7 @@ type (
 	//Reader represents binary readers
 	Reader struct {
 		decAlloc decInt32s
+		decMAlloc decUint16s
 		decInts
 		decUints
 		decInt64s
@@ -145,6 +146,13 @@ func (r *Reader) Any(v interface{}) error {
 func (r *Reader) Alloc() int32 {
 	alloc := r.decAlloc[0]
 	r.decAlloc = r.decAlloc[1:]
+	return alloc
+}
+
+//MAlloc shifts allocation size (for repeated or pointers(nil:0,1))
+func (r *Reader) MAlloc() uint16 {
+	alloc := r.decMAlloc[0]
+	r.decMAlloc = r.decMAlloc[1:]
 	return alloc
 }
 
@@ -595,6 +603,7 @@ func (r *Reader) Coder(coder Decoder) error {
 func (r *Reader) FromBytes(data []byte) error {
 	offset := 0
 	offset = r.decAlloc.load(data, offset, codecAlloc)
+	offset = r.decMAlloc.load(data, offset, codecMAlloc)
 	offset = r.decInts.load(data, offset)
 	offset = r.decFloat64s.load(data, offset)
 	offset = r.decUint8s.load(data, offset)
@@ -611,7 +620,7 @@ func (r *Reader) FromBytes(data []byte) error {
 	offset = r.decInt32s.load(data, offset, codecInt32s)
 	offset = r.decUint32s.load(data, offset)
 	offset = r.decInt16s.load(data, offset)
-	offset = r.decUint16s.load(data, offset)
+	offset = r.decUint16s.load(data, offset, codecUint16s)
 	offset = r.decInt8s.load(data, offset)
 	if data[offset] != codecEOF {
 		return fmt.Errorf("corrupted bintly stream expected: %v, but had %v", codecEOF, data[offset])
@@ -760,8 +769,8 @@ func (s *decInt16s) load(data []byte, offset int) int {
 	return offset
 }
 
-func (s *decUint16s) load(data []byte, offset int) int {
-	if data[offset] != codecUint16s {
+func (s *decUint16s) load(data []byte, offset int, codec uint8) int {
+	if data[offset] != codec {
 		return offset
 	}
 	offset += size8bitsInBytes

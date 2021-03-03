@@ -3,6 +3,7 @@ package bintly
 const (
 	codecEOF = uint8(iota)
 	codecAlloc
+	codecMAlloc
 	codecInts
 	codecUints
 	codecInt64s

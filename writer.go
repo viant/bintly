@@ -11,7 +11,8 @@ import (
 type (
 	//Writer represents binary writer
 	Writer struct {
-		alloc encInt32s
+		alloc  encInt32s
+		mAlloc encUint16s
 		encInts
 		encUints
 		encInt64s
@@ -188,6 +189,11 @@ func (w *Writer) anyReflect(v interface{}) error {
 //Alloc append data allocation size for repeater or pointers(0,1) types
 func (w *Writer) Alloc(size int32) {
 	w.alloc.Int32(size)
+}
+
+//Alloc append data allocation size for repeater or pointers(0,1) types
+func (w *Writer) MAlloc(size uint16) {
+	w.mAlloc.Uint16(size)
 }
 
 //IntPtr writes *int
@@ -489,6 +495,7 @@ func (w *Writer) Coder(v Encoder) error {
 //Size returns data size
 func (w *Writer) Size() int {
 	result := size8bitsInBytes + w.alloc.size()
+	result += w.mAlloc.size()
 	result += w.encInts.size() + w.encUints.size()
 	result += w.encInt64s.size() + w.encUint64s.size()
 	result += w.encInt32s.size() + w.encUint32s.size()
@@ -505,6 +512,9 @@ func (w *Writer) Bytes() []byte {
 	var ok bool
 	if offset, ok = w.alloc.store(data, offset, codecAlloc); ok {
 		w.alloc = w.alloc[:0]
+	}
+	if offset, ok = w.mAlloc.store(data, offset, codecMAlloc); ok {
+		w.mAlloc = w.mAlloc[:0]
 	}
 	if offset, ok = w.encInts.store(data, offset); ok {
 		w.encInts = w.encInts[:0]
@@ -536,7 +546,7 @@ func (w *Writer) Bytes() []byte {
 	if offset, ok = w.encInt16s.store(data, offset); ok {
 		w.encInt16s = w.encInt16s[:0]
 	}
-	if offset, ok = w.encUint16s.store(data, offset); ok {
+	if offset, ok = w.encUint16s.store(data, offset, codecUint16s); ok {
 		w.encUint16s = w.encUint16s[:0]
 	}
 	if offset, ok = w.encInt8s.store(data, offset); ok {
@@ -765,12 +775,12 @@ func (s *encUint16s) appendUint16s(v []uint16) {
 	*s = append(*s, v...)
 }
 
-func (s *encUint16s) store(data []byte, offset int) (int, bool) {
+func (s *encUint16s) store(data []byte, offset int, codec uint8) (int, bool) {
 	size := len(*s)
 	if size == 0 {
 		return offset, false
 	}
-	data[offset] = codecUint16s
+	data[offset] = codec
 	offset += size8bitsInBytes
 	PutInt32(data[offset:], int32(size))
 	offset += size32bitsInBytes
