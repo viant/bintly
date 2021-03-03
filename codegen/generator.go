@@ -87,8 +87,8 @@ func generateStructDecoding(sess *session, typeName string) (string, error) {
 
 }
 
-func generateCoding(session *session, typeName string, baseTemplate int, fn fieldGenerator) (string, error) {
-	typeInfo := session.Type(typeName)
+func generateCoding(sess *session, typeName string, baseTemplate int, fn fieldGenerator) (string, error) {
+	typeInfo := sess.Type(typeName)
 	if typeInfo == nil {
 		return "", fmt.Errorf("failed to lookup '%s'", typeName)
 	}
@@ -109,13 +109,47 @@ func generateCoding(session *session, typeName string, baseTemplate int, fn fiel
 			codings = append(codings, code)
 			continue
 		}
-		code, err := fn(session, field)
+		baseType,err := getBaseDerivedType(sess,field.TypeName)
+		if baseType != "" {
+			method := genCodingMethod(field)
+			receiverAlias := strings.ToLower(typeName[0:1])
+			code, err := expandFieldTemplate(baseTemplate, struct {
+				Method        string
+				Field         string
+				ReceiverAlias string
+			}{method, field.Name, receiverAlias})
+			if err != nil {
+				return "", err
+			}
+			codings = append(codings, code)
+			continue
+		}
+
+
+		code, err := fn(sess, field)
 		if err != nil {
 			return "", err
 		}
 		codings = append(codings, code)
 	}
 	return "\t" + strings.Join(codings, "\n\t"), nil
+}
+
+func getBaseDerivedType(s *session, typeName string) (string,error) {
+	aType := s.Type(typeName)
+	if aType == nil {
+		return "",fmt.Errorf("alias type name %v is nil for type %v ",aType,typeName)
+	}
+	if aType.IsDerived{
+		derived,err := getBaseDerivedType(s,aType.Derived)
+		if err != nil {
+			return "",err
+		}
+		if derived == "" {
+			return aType.Derived,nil
+		}
+	}
+	return "",nil
 }
 
 func genCodingMethod(field *toolbox.FieldInfo) string {
