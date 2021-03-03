@@ -3,6 +3,7 @@ package codegen
 import (
 	"fmt"
 	"github.com/viant/toolbox"
+	"io/ioutil"
 	"strings"
 )
 
@@ -25,6 +26,12 @@ func Generate(options *Options) error {
 			return err
 		}
 	}
+
+	if options.Dest == "" {
+		fmt.Print(session.structCodingCode)
+		return nil
+	}
+	return ioutil.WriteFile(options.Dest, []byte(strings.Join(session.structCodingCode,"")), 0644)
 
 	return nil
 
@@ -52,6 +59,7 @@ func generateStructCoding(session *session, typeName string) error {
 		return err
 	}
 	session.structCodingCode = append(session.structCodingCode, code)
+//
 	return nil
 }
 
@@ -96,7 +104,7 @@ func generateCoding(session *session, typeName string, baseTemplate int, fn fiel
 		}
 		codings = append(codings, code)
 	}
-	return strings.Join(codings, "\t\n"), nil
+	return "\t"+strings.Join(codings, "\n\t"), nil
 }
 
 func genCodingMethod(field *toolbox.FieldInfo) string {
@@ -105,7 +113,14 @@ func genCodingMethod(field *toolbox.FieldInfo) string {
 		codingMethod += "Ptr"
 	}
 	if field.IsSlice {
+		codingMethod = codingMethod[2:]
 		codingMethod += "s"
 	}
 	return codingMethod
 }
+
+
+
+
+
+

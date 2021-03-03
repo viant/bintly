@@ -1,6 +1,9 @@
 package basic_struct
-
+type X1 struct{
+	Y1 []string
+}
 type Message struct {
+	X11 X1
 	A1 int
 	B1 *int
 	C1 []int
