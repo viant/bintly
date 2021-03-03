@@ -12,6 +12,7 @@ import (
 	"testing"
 )
 
+
 var b1 = BenchStruct{
 	A1: math.MaxInt32,
 	A2: "this is benchmark test",
@@ -60,7 +61,7 @@ func Test_BenchStruct(t *testing.T) {
 	}
 	{ //test cobr reflect
 		alias := BenchStructAlias(b1)
-		data, err := cbor.Marshal(&alias)
+		data, err := cbor.Marshal(&alias, cbor.EncOptions{})
 		assert.Nil(t, err)
 		clone := BenchStructAlias{}
 		err = cbor.Unmarshal(data, &clone)
@@ -165,7 +166,7 @@ func BenchmarkMarshalGob(b *testing.B) {
 }
 
 func BenchmarkUnmarshalCbor(b *testing.B) {
-	data, err := cbor.Marshal(b1)
+	data, err := cbor.Marshal(b1, cbor.EncOptions{})
 	if !assert.Nil(b, err) {
 		return
 	}
@@ -182,7 +183,7 @@ func BenchmarkMarshalCbor(b *testing.B) {
 	b.ReportAllocs()
 	var err error
 	for i := 0; i < b.N; i++ {
-		_, err = cbor.Marshal(b1)
+		_, err = cbor.Marshal(b1,cbor.EncOptions{})
 	}
 	assert.Nil(b, err)
 }

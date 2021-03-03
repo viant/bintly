@@ -478,7 +478,7 @@ func (w *Writer) String(v string) {
 //StringPtr writes *string
 func (w *Writer) StringPtr(v *string) {
 	if v == nil {
-		w.alloc.Int32(NilSize)
+		w.alloc.Int32(0)
 		return
 	}
 	b := unsafeGetBytes(*v)
