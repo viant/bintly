@@ -99,14 +99,14 @@ func generateStructDecoding(sess *session, typeName string) (string, error) {
 func generateCoding(sess *session, typeName string, receiverPrefix string, isDecoder bool, fn fieldGenerator) (string, error) {
 
 	baseTemplate := encodeBaseType
-	baseDerivedTemplate := encodeDerivedBaseType
+	derivedTemplate := encodeDerivedBaseType
 	baseSliceTemplate := encodeBaseSliceType
-	baseCustomSliceTemplate := encodeCustomSliceType
+	derivedSliceTemplate := encodeCustomSliceType
 	if isDecoder {
 		baseTemplate = decodeBaseType
-		baseDerivedTemplate = decodeDerivedBaseType
+		derivedTemplate = decodeDerivedBaseType
 		baseSliceTemplate = decodeBaseSliceType
-		baseCustomSliceTemplate = decodeCustomSliceType
+		derivedSliceTemplate = decodeCustomSliceType
 	}
 	typeInfo := sess.Type(typeName)
 	if typeInfo == nil {
@@ -137,11 +137,11 @@ func generateCoding(sess *session, typeName string, receiverPrefix string, isDec
 			continue
 		}
 
-		// base type aliasing
+		// derived type
 		baseType, err := getBaseDerivedType(sess, field.TypeName)
 		if baseType != "" {
 			method := genCodingMethod(baseType, field.IsPointer, field.IsSlice)
-			code, err := expandFieldTemplate(baseDerivedTemplate, templateParameters{
+			code, err := expandFieldTemplate(derivedTemplate, templateParameters{
 				Method:        method,
 				Field:         field.Name,
 				FieldType:     field.TypeName,
@@ -156,7 +156,7 @@ func generateCoding(sess *session, typeName string, receiverPrefix string, isDec
 			continue
 		}
 
-		// base slice type aliasing
+		// base slice type
 		sliceType, err := getBaseSliceType(sess, field.TypeName)
 		if sliceType != "" {
 			method := genCodingMethod("[]"+sliceType, false, true)
@@ -175,12 +175,12 @@ func generateCoding(sess *session, typeName string, receiverPrefix string, isDec
 			continue
 		}
 
-		// custom slice type
-		customSliceType, err := getBaseComponentType(sess, field.TypeName)
+		// derived slice type
+		customSliceType, err := getDerivedSliceType(sess, field.TypeName)
 		if customSliceType != "" {
 			sess.addImport("unsafe")
 			method := genCodingMethod("[]"+customSliceType, false, true)
-			code, err := expandFieldTemplate(baseCustomSliceTemplate, templateParameters{
+			code, err := expandFieldTemplate(derivedSliceTemplate, templateParameters{
 				Method:        method,
 				Field:         field.Name,
 				FieldType:     field.TypeName,
@@ -211,7 +211,7 @@ func generateCoding(sess *session, typeName string, receiverPrefix string, isDec
 		}
 		codings = append(codings, code)
 	}
-	return "\t" + strings.Join(codings, "\n\t"), nil
+	return strings.Join(codings, "\n"), nil
 }
 
 func getBaseDerivedType(s *session, typeName string) (string, error) {
@@ -246,7 +246,7 @@ func getBaseSliceType(s *session, typeName string) (string, error) {
 	return "", nil
 }
 
-func getBaseComponentType(s *session, typeName string) (string, error) {
+func getDerivedSliceType(s *session, typeName string) (string, error) {
 	aType := s.Type(typeName)
 	if aType == nil {
 		return "", fmt.Errorf("alias type name %v is nil for type %v ", aType, typeName)
