@@ -9,3 +9,9 @@ func isBaseType(typeName string) bool {
 	}
 	return false
 }
+
+type baseType struct {
+	name      string
+	isPointer bool
+	isSlice   bool
+}

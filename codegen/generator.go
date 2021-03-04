@@ -75,19 +75,26 @@ func generateStructCoding(session *session, typeName string) error {
 }
 
 func generateStructEncoding(sess *session, typeName string) (string, error) {
-	return generateCoding(sess, typeName, encodeBaseType, func(sess *session, field *toolbox.FieldInfo) (string, error) {
+	return generateCoding(sess, typeName, false, func(sess *session, field *toolbox.FieldInfo) (string, error) {
 		return "", fmt.Errorf("unsupported type: %s for field %v.%v", field.TypeName, typeName, field.Name)
 	})
 }
 
 func generateStructDecoding(sess *session, typeName string) (string, error) {
-	return generateCoding(sess, typeName, decodeBaseType, func(session *session, field *toolbox.FieldInfo) (string, error) {
+	return generateCoding(sess, typeName, true, func(session *session, field *toolbox.FieldInfo) (string, error) {
 		return "", fmt.Errorf("unsupported type: %s for field %v.%v", field.TypeName, typeName, field.Name)
 	})
 
 }
 
-func generateCoding(sess *session, typeName string, baseTemplate int, fn fieldGenerator) (string, error) {
+func generateCoding(sess *session, typeName string, isDecoder bool, fn fieldGenerator) (string, error) {
+
+	baseTemplate := encodeBaseType
+	baseDerivedTemplate := encodeDerivedBaseType
+	if isDecoder {
+		baseTemplate = decodeBaseType
+		baseDerivedTemplate = decodeDerivedBaseType
+	}
 	typeInfo := sess.Type(typeName)
 	if typeInfo == nil {
 		return "", fmt.Errorf("failed to lookup '%s'", typeName)
@@ -96,22 +103,7 @@ func generateCoding(sess *session, typeName string, baseTemplate int, fn fieldGe
 	fields := typeInfo.Fields()
 	for _, field := range fields {
 		if isBaseType(field.TypeName) {
-			method := genCodingMethod(field)
-			receiverAlias := strings.ToLower(typeName[0:1])
-			code, err := expandFieldTemplate(baseTemplate, struct {
-				Method        string
-				Field         string
-				ReceiverAlias string
-			}{method, field.Name, receiverAlias})
-			if err != nil {
-				return "", err
-			}
-			codings = append(codings, code)
-			continue
-		}
-		baseType,err := getBaseDerivedType(sess,field.TypeName)
-		if baseType != "" {
-			method := genCodingMethod(field)
+			method := genCodingMethod(field.TypeName, field.IsPointer, field.IsSlice)
 			receiverAlias := strings.ToLower(typeName[0:1])
 			code, err := expandFieldTemplate(baseTemplate, struct {
 				Method        string
@@ -125,6 +117,61 @@ func generateCoding(sess *session, typeName string, baseTemplate int, fn fieldGe
 			continue
 		}
 
+		// base type aliasing
+		baseType, err := getBaseDerivedType(sess, field.TypeName)
+		if baseType != "" {
+
+			method := genCodingMethod(baseType, field.IsPointer, field.IsSlice)
+			receiverAlias := strings.ToLower(typeName[0:1])
+			code, err := expandFieldTemplate(baseDerivedTemplate, struct {
+				Method        string
+				Field         string
+				FieldType     string
+				ReceiverAlias string
+				TransientVar  string
+				BaseType      string
+			}{
+				Method:        method,
+				Field:         field.Name,
+				FieldType:     field.TypeName,
+				ReceiverAlias: receiverAlias,
+				TransientVar:  toolbox.ToCaseFormat(field.Name, toolbox.CaseUpperCamel, toolbox.CaseLowerCamel),
+				BaseType:      baseType,
+			})
+			if err != nil {
+				return "", err
+			}
+			codings = append(codings, code)
+			continue
+		}
+
+		// base slice type aliasing
+		sliceType, err := getBaseSliceType(sess, field.TypeName)
+		if sliceType != "" {
+
+			method := genCodingMethod("[]"+sliceType, false, true)
+			receiverAlias := strings.ToLower(typeName[0:1])
+			code, err := expandFieldTemplate(baseDerivedTemplate, struct {
+				Method        string
+				Field         string
+				FieldType     string
+				ReceiverAlias string
+				TransientVar  string
+				BaseType      string
+			}{
+				Method:        method,
+				Field:         field.Name,
+				FieldType:     field.TypeName,
+				ReceiverAlias: receiverAlias,
+				TransientVar:  toolbox.ToCaseFormat(field.Name, toolbox.CaseUpperCamel, toolbox.CaseLowerCamel),
+				BaseType:      sliceType,
+			})
+			if err != nil {
+				return "", err
+			}
+			codings = append(codings, code)
+			continue
+		}
 
 		code, err := fn(sess, field)
 		if err != nil {
@@ -135,31 +182,47 @@ func generateCoding(sess *session, typeName string, baseTemplate int, fn fieldGe
 	return "\t" + strings.Join(codings, "\n\t"), nil
 }
 
-func getBaseDerivedType(s *session, typeName string) (string,error) {
+func getBaseDerivedType(s *session, typeName string) (string, error) {
 	aType := s.Type(typeName)
 	if aType == nil {
-		return "",fmt.Errorf("alias type name %v is nil for type %v ",aType,typeName)
+		return "", fmt.Errorf("alias type name %v is nil for type %v ", aType, typeName)
 	}
-	if aType.IsDerived{
-		derived,err := getBaseDerivedType(s,aType.Derived)
+	if aType.IsDerived {
+		derived := aType.Derived
+		if isBaseType(derived) {
+			return derived, nil
+		}
+		derived, err := getBaseDerivedType(s, derived)
 		if err != nil {
-			return "",err
+			return "", err
 		}
-		if derived == "" {
-			return aType.Derived,nil
+		if isBaseType(derived) {
+			return derived, nil
 		}
 	}
-	return "",nil
+	return "", nil
 }
 
-func genCodingMethod(field *toolbox.FieldInfo) string {
-	codingMethod := strings.Title(field.TypeName)
-	if field.IsPointer {
+func getBaseSliceType(s *session, typeName string) (string, error) {
+	aType := s.Type(typeName)
+	if aType == nil {
+		return "", fmt.Errorf("alias type name %v is nil for type %v ", aType, typeName)
+	}
+	if aType.IsSlice && isBaseType(aType.ComponentType) {
+		return aType.ComponentType, nil
+	}
+	return "", nil
+}
+
+func genCodingMethod(baseType string, IsPointer bool, IsSlice bool) string {
+	codingMethod := strings.Title(baseType)
+	if IsPointer {
 		codingMethod += "Ptr"
 	}
-	if field.IsSlice {
+	if IsSlice {
 		codingMethod = codingMethod[2:]
 		codingMethod += "s"
 	}
 	return codingMethod
+
 }

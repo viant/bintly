@@ -9,11 +9,18 @@ import (
 const (
 	decodeBaseType = iota
 	encodeBaseType
+	decodeDerivedBaseType
+	encodeDerivedBaseType
 )
 
 var fieldTemplate = map[int]string{
 	encodeBaseType: `coder.{{.Method}}({{.ReceiverAlias}}.{{.Field}})`,
 	decodeBaseType: `coder.{{.Method}}(&{{.ReceiverAlias}}.{{.Field}})`,
+	decodeDerivedBaseType: `
+var {{.TransientVar}} {{.BaseType}}
+coder.{{.Method}}(&{{.TransientVar}})
+{{.ReceiverAlias}}.{{.Field}} = {{.FieldType}}({{.TransientVar}})`,
+	encodeDerivedBaseType: `coder.{{.Method}}({{.BaseType}}({{.ReceiverAlias}}.{{.Field}}))`,
 }
 
 const (

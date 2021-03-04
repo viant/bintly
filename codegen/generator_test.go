@@ -17,13 +17,21 @@ func TestGen(t *testing.T) {
 		hasError    bool
 	}{
 		{
-			description: "basic struct code generation",
+			description: "basic aliased types",
 			options: &Options{
-				Source: path.Join(parent, "basic_struct"),
+				Source: path.Join(parent, "primitive_alias"),
 				Types:  []string{"Message"},
-				Dest:   path.Join(parent, "basic_struct", "encoding.go"),
+				Dest:   path.Join(parent, "primitive_alias", "encoding.go"),
 			},
 		},
+		//{
+		//	description: "basic struct code generation",
+		//	options: &Options{
+		//		Source: path.Join(parent, "basic_struct"),
+		//		Types:  []string{"Message"},
+		//		Dest:   path.Join(parent, "basic_struct", "encoding.go"),
+		//	},
+		//},
 	}
 
 	for _, useCase := range useCases {
