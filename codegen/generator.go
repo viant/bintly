@@ -116,10 +116,6 @@ func generateCoding(sess *session, typeName string, receiverPrefix string, isDec
 	var codings = make([]string, 0)
 	fields := typeInfo.Fields()
 	for _, field := range fields {
-		fieldType := sess.Type(field.TypeName)
-		if fieldType == nil {
-			return "", fmt.Errorf("unsupported field type %v for field %v", fieldType, field);
-		}
 
 		var receiverAlias string
 		if len(receiverPrefix) == 0 {
@@ -201,7 +197,12 @@ func generateCoding(sess *session, typeName string, receiverPrefix string, isDec
 			continue
 		}
 
-		if (isStruct(fieldType)) {
+		// struct type
+		fieldType := sess.Type(field.TypeName)
+		if fieldType == nil {
+			return "", fmt.Errorf("unsupported field type %v for field %v", fieldType, field)
+		}
+		if isStruct(fieldType) {
 			if err = generateStructCoding(sess, fieldType.Name); err != nil {
 				return "", err
 			}
@@ -218,8 +219,6 @@ func generateCoding(sess *session, typeName string, receiverPrefix string, isDec
 			continue
 
 		}
-
-
 
 		code, err := fn(sess, field)
 		if err != nil {
