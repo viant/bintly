@@ -40,12 +40,6 @@ func Generate(options *Options) error {
 		}
 	}
 
-	if options.Dest == "" {
-		fmt.Print(session.structCodingCode)
-		return nil
-	}
-	return ioutil.WriteFile(options.Dest, []byte(strings.Join(session.structCodingCode, "")), 0644)
-
 	return nil
 
 }
@@ -81,23 +75,30 @@ func generateStructCoding(session *session, typeName string) error {
 
 	session.structCodingCode = append(session.structCodingCode, code)
 	//
-	return nil
+	if session.Dest == "" {
+		fmt.Print(session.structCodingCode)
+		return nil
+	}
+
+	err = ioutil.WriteFile(session.Dest+"/"+typeName+"_enc.go", []byte(strings.Join(session.structCodingCode, "")), 0644)
+	session.structCodingCode = []string{}
+	return err
 }
 
 func generateStructEncoding(sess *session, typeName string) (string, error) {
-	return generateCoding(sess, typeName, "", false, func(sess *session, field *toolbox.FieldInfo) (string, error) {
+	return generateCoding(sess, typeName, false, func(sess *session, field *toolbox.FieldInfo) (string, error) {
 		return "", fmt.Errorf("unsupported type: %s for field %v.%v", field.TypeName, typeName, field.Name)
 	})
 }
 
 func generateStructDecoding(sess *session, typeName string) (string, error) {
-	return generateCoding(sess, typeName, "", true, func(session *session, field *toolbox.FieldInfo) (string, error) {
+	return generateCoding(sess, typeName, true, func(session *session, field *toolbox.FieldInfo) (string, error) {
 		return "", fmt.Errorf("unsupported type: %s for field %v.%v", field.TypeName, typeName, field.Name)
 	})
 
 }
 
-func generateCoding(sess *session, typeName string, receiverPrefix string, isDecoder bool, fn fieldGenerator) (string, error) {
+func generateCoding(sess *session, typeName string, isDecoder bool, fn fieldGenerator) (string, error) {
 
 	baseTemplate := encodeBaseType
 	derivedTemplate := encodeDerivedBaseType
@@ -116,13 +117,7 @@ func generateCoding(sess *session, typeName string, receiverPrefix string, isDec
 	var codings = make([]string, 0)
 	fields := typeInfo.Fields()
 	for _, field := range fields {
-
-		var receiverAlias string
-		if len(receiverPrefix) == 0 {
-			receiverAlias = strings.ToLower(typeName[0:1])
-		} else {
-			receiverAlias = receiverPrefix
-		}
+		receiverAlias := strings.ToLower(typeName[0:1])
 
 		// base type
 		if isBaseType(field.TypeName) {
