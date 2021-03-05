@@ -21,7 +21,7 @@ func TestGen(t *testing.T) {
 			options: &Options{
 				Source: path.Join(parent, "messages"),
 				Types:  []string{"Message"},
-				Dest:   path.Join(parent, "messages", "encoding_sample.go"),
+				Dest:   path.Join(parent, "messages"),
 			},
 		},
 		{
@@ -29,7 +29,7 @@ func TestGen(t *testing.T) {
 			options: &Options{
 				Source: path.Join(parent, "basic_struct"),
 				Types:  []string{"Message"},
-				Dest:   path.Join(parent, "basic_struct", "encoding_sample.go"),
+				Dest:   path.Join(parent, "basic_struct", "encoding.go"),
 			},
 		},
 		{
@@ -37,7 +37,7 @@ func TestGen(t *testing.T) {
 			options: &Options{
 				Source: path.Join(parent, "primitive_alias"),
 				Types:  []string{"Message"},
-				Dest:   path.Join(parent, "primitive_alias", "encoding_sample.go"),
+				Dest:   path.Join(parent, "primitive_alias", "encoding.go"),
 			},
 		},
 	}
