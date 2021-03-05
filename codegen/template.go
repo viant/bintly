@@ -16,32 +16,22 @@ const (
 	decodeCustomSliceType
 	encodeCustomSliceType
 )
-//	coder.Ints((m.C1))
-//var c1 int
-//coder.Ints(&c1)
-//m.C1 = SliceInt(c1)
-
-//coder.Ints(*(*[]int)(unsafe.Pointer(&m.D1)))
-//var d1 []int
-//coder.Ints(&d1)
-//m.D1 = *(*Aints)(unsafe.Pointer(&d1))
 
 var fieldTemplate = map[int]string{
-	encodeBaseType: `coder.{{.Method}}({{.ReceiverAlias}}.{{.Field}})`,
-	decodeBaseType: `coder.{{.Method}}(&{{.ReceiverAlias}}.{{.Field}})`,
-	decodeDerivedBaseType: `var {{.TransientVar}} {{.BaseType}}
+	encodeBaseType: `	coder.{{.Method}}({{.ReceiverAlias}}.{{.Field}})`,
+	decodeBaseType: `	coder.{{.Method}}(&{{.ReceiverAlias}}.{{.Field}})`,
+	decodeDerivedBaseType: `	var {{.TransientVar}} {{.BaseType}}
 	coder.{{.Method}}(&{{.TransientVar}})
 	{{.ReceiverAlias}}.{{.Field}} = {{.FieldType}}({{.TransientVar}})`,
-	encodeDerivedBaseType: `coder.{{.Method}}({{.BaseType}}({{.ReceiverAlias}}.{{.Field}}))`,
-	encodeBaseSliceType:`coder.{{.Method}}(({{.ReceiverAlias}}.{{.Field}}))`,
-	decodeBaseSliceType:`var {{.TransientVar}} []{{.BaseType}}
+	encodeDerivedBaseType: `	coder.{{.Method}}({{.BaseType}}({{.ReceiverAlias}}.{{.Field}}))`,
+	encodeBaseSliceType: `	coder.{{.Method}}(({{.ReceiverAlias}}.{{.Field}}))`,
+	decodeBaseSliceType: `	var {{.TransientVar}} []{{.BaseType}}
 	coder.{{.Method}}(&{{.TransientVar}})
 	{{.ReceiverAlias}}.{{.Field}} = {{.TransientVar}}`,
-	encodeCustomSliceType: `coder.{{.Method}}(*(*[]{{.BaseType}})(unsafe.Pointer(&{{.ReceiverAlias}}.{{.Field}})))`,
-	decodeCustomSliceType: `var {{.TransientVar}} []{{.BaseType}}
+	encodeCustomSliceType: `	coder.{{.Method}}(*(*[]{{.BaseType}})(unsafe.Pointer(&{{.ReceiverAlias}}.{{.Field}})))`,
+	decodeCustomSliceType: `	var {{.TransientVar}} []{{.BaseType}}
 	coder.{{.Method}}(&{{.TransientVar}})
 	{{.ReceiverAlias}}.{{.Field}} = *(*{{.FieldType}})(unsafe.Pointer(&{{.TransientVar}}))`,
-
 }
 
 const (
