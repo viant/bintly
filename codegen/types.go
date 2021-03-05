@@ -1,5 +1,7 @@
 package codegen
 
+import "github.com/viant/toolbox"
+
 func isBaseType(typeName string) bool {
 
 	switch typeName {
@@ -14,4 +16,8 @@ type baseType struct {
 	name      string
 	isPointer bool
 	isSlice   bool
+}
+
+func isStruct(aType *toolbox.TypeInfo) bool {
+	return len(aType.Fields()) > 0
 }

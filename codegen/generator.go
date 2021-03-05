@@ -16,6 +16,7 @@ type templateParameters struct {
 	ReceiverAlias string
 	TransientVar  string
 	BaseType      string
+	PointerNeeded bool
 }
 
 func Generate(options *Options) error {
@@ -115,6 +116,11 @@ func generateCoding(sess *session, typeName string, receiverPrefix string, isDec
 	var codings = make([]string, 0)
 	fields := typeInfo.Fields()
 	for _, field := range fields {
+		fieldType := sess.Type(field.TypeName)
+		if fieldType == nil {
+			return "", fmt.Errorf("unsupported field type %v for field %v", fieldType, field);
+		}
+
 		var receiverAlias string
 		if len(receiverPrefix) == 0 {
 			receiverAlias = strings.ToLower(typeName[0:1])
@@ -195,15 +201,25 @@ func generateCoding(sess *session, typeName string, receiverPrefix string, isDec
 			continue
 		}
 
-		// try to walk down the tree
-		if true {
-			code, err := generateCoding(sess, field.TypeName, receiverAlias+"."+field.Name, isDecoder, fn)
+		if (isStruct(fieldType)) {
+			if err = generateStructCoding(sess, fieldType.Name); err != nil {
+				return "", err
+			}
+			code, err := expandFieldTemplate(baseTemplate, templateParameters{
+				Method:        "Coder",
+				Field:         field.Name,
+				ReceiverAlias: receiverAlias,
+				PointerNeeded: !field.IsPointer,
+			})
 			if err != nil {
 				return "", err
 			}
 			codings = append(codings, code)
 			continue
+
 		}
+
+
 
 		code, err := fn(sess, field)
 		if err != nil {

@@ -17,8 +17,13 @@ const (
 	encodeCustomSliceType
 )
 
+//enc.Coder(p.Providers[i]); err != nil {
+//return nil
+//}
 var fieldTemplate = map[int]string{
+
 	encodeBaseType: `	coder.{{.Method}}({{.ReceiverAlias}}.{{.Field}})`,
+
 	decodeBaseType: `	coder.{{.Method}}(&{{.ReceiverAlias}}.{{.Field}})`,
 	decodeDerivedBaseType: `	var {{.TransientVar}} {{.BaseType}}
 	coder.{{.Method}}(&{{.TransientVar}})
