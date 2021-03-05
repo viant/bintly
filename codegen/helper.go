@@ -2,6 +2,7 @@ package codegen
 
 import (
 	"github.com/viant/toolbox"
+	"regexp"
 	"strings"
 )
 
@@ -37,15 +38,12 @@ func getSliceHelperTypeName(typeName string, isPointer bool) string {
 	return pluralName
 }
 
-
-
 func wrapperIfNeeded(text, wrappingChar string) string {
 	if strings.HasPrefix(text, wrappingChar) {
 		return text
 	}
 	return wrappingChar + text + wrappingChar
 }
-
 
 func getJSONKey(options *Options, field *toolbox.FieldInfo) string {
 	var key = field.Name
@@ -54,4 +52,19 @@ func getJSONKey(options *Options, field *toolbox.FieldInfo) string {
 
 func normalizeTypeName(typeName string) string {
 	return strings.Replace(typeName, "*", "", strings.Count(typeName, "*"))
+}
+
+var camel = regexp.MustCompile("(^[^A-Z]*|[A-Z]*)([A-Z][^A-Z]+|$)")
+
+func snakeCase(s string) string {
+	var a []string
+	for _, sub := range camel.FindAllStringSubmatch(s, -1) {
+		if sub[1] != "" {
+			a = append(a, sub[1])
+		}
+		if sub[2] != "" {
+			a = append(a, sub[2])
+		}
+	}
+	return strings.ToLower(strings.Join(a, "_"))
 }

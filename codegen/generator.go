@@ -80,7 +80,8 @@ func generateStructCoding(session *session, typeName string) error {
 		return nil
 	}
 
-	err = ioutil.WriteFile(session.Dest+"/"+typeName+"_enc.go", []byte(strings.Join(session.structCodingCode, "")), 0644)
+	dest := session.Dest + "/" + snakeCase(typeName) + "_enc.go"
+	err = ioutil.WriteFile(dest, []byte(strings.Join(session.structCodingCode, "")), 0644)
 	session.structCodingCode = []string{}
 	return err
 }
@@ -201,7 +202,7 @@ func generateCoding(sess *session, typeName string, isDecoder bool, fn fieldGene
 			if err = generateStructCoding(sess, fieldType.Name); err != nil {
 				return "", err
 			}
-			code, err := expandFieldTemplate(baseTemplate, templateParameters{
+			code, err := expandFieldTemplate(coderStructType, templateParameters{
 				Method:        "Coder",
 				Field:         field.Name,
 				ReceiverAlias: receiverAlias,

@@ -15,6 +15,7 @@ const (
 	encodeBaseSliceType
 	decodeCustomSliceType
 	encodeCustomSliceType
+	coderStructType
 )
 
 //enc.Coder(p.Providers[i]); err != nil {
@@ -23,7 +24,6 @@ const (
 var fieldTemplate = map[int]string{
 
 	encodeBaseType: `	coder.{{.Method}}({{.ReceiverAlias}}.{{.Field}})`,
-
 	decodeBaseType: `	coder.{{.Method}}(&{{.ReceiverAlias}}.{{.Field}})`,
 	decodeDerivedBaseType: `	var {{.TransientVar}} {{.BaseType}}
 	coder.{{.Method}}(&{{.TransientVar}})
@@ -37,6 +37,7 @@ var fieldTemplate = map[int]string{
 	decodeCustomSliceType: `	var {{.TransientVar}} []{{.BaseType}}
 	coder.{{.Method}}(&{{.TransientVar}})
 	{{.ReceiverAlias}}.{{.Field}} = *(*{{.FieldType}})(unsafe.Pointer(&{{.TransientVar}}))`,
+	coderStructType: `	coder.{{.Method}}({{if .PointerNeeded}}&{{end}}{{.ReceiverAlias}}.{{.Field}})`,
 }
 
 const (
