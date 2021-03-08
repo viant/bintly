@@ -105,11 +105,13 @@ func generateCoding(sess *session, typeName string, isDecoder bool, fn fieldGene
 	derivedTemplate := encodeDerivedBaseType
 	baseSliceTemplate := encodeBaseSliceType
 	derivedSliceTemplate := encodeCustomSliceType
+	structTemplate := encodeStructType
 	if isDecoder {
 		baseTemplate = decodeBaseType
 		derivedTemplate = decodeDerivedBaseType
 		baseSliceTemplate = decodeBaseSliceType
 		derivedSliceTemplate = decodeCustomSliceType
+		structTemplate = decodeStructType
 	}
 	typeInfo := sess.Type(typeName)
 	if typeInfo == nil {
@@ -202,9 +204,10 @@ func generateCoding(sess *session, typeName string, isDecoder bool, fn fieldGene
 			if err = generateStructCoding(sess, fieldType.Name); err != nil {
 				return "", err
 			}
-			code, err := expandFieldTemplate(coderStructType, templateParameters{
+			code, err := expandFieldTemplate(structTemplate, templateParameters{
 				Method:        "Coder",
 				Field:         field.Name,
+				FieldType:     field.TypeName,
 				ReceiverAlias: receiverAlias,
 				PointerNeeded: !field.IsPointer,
 			})
