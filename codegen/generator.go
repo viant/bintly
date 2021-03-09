@@ -228,17 +228,23 @@ func generateCoding(sess *session, typeName string, isDecoder bool, fn fieldGene
 			continue
 
 		}
+
+		// struct slice
 		if isStruct(fieldType) && field.IsSlice {
 			if err = generateStructCoding(sess, fieldType.Name); err != nil {
 				return "", err
 			}
+			fieldTypeName := field.TypeName[2:]
+			if field.IsPointerComponent {
+				fieldTypeName = field.TypeName[3:]
+			}
 			code, err := expandFieldTemplate(customSliceTemplate, templateParameters{
 				Method:        "Coder",
 				Field:         field.Name,
-				FieldType:     field.TypeName,
+				FieldType:     fieldTypeName,
 				ReceiverAlias: receiverAlias,
 				TransientVar:  toolbox.ToCaseFormat(field.Name, toolbox.CaseUpperCamel, toolbox.CaseLowerCamel),
-				PointerNeeded: !field.IsPointer,
+				PointerNeeded: !field.IsPointerComponent,
 			})
 			if err != nil {
 				return "", err
@@ -246,9 +252,7 @@ func generateCoding(sess *session, typeName string, isDecoder bool, fn fieldGene
 			codings = append(codings, code)
 			continue
 
-
 		}
-
 
 		code, err := fn(sess, field)
 		if err != nil {
@@ -333,5 +337,3 @@ func getBaseFieldType(fieldType string) string {
 	}
 	return fieldType
 }
-
-

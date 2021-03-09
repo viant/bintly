@@ -21,7 +21,6 @@ const (
 	decodeSliceStructType
 )
 
-
 var fieldTemplate = map[int]string{
 	encodeBaseType: `	coder.{{.Method}}({{.ReceiverAlias}}.{{.Field}})`,
 	decodeBaseType: `	coder.{{.Method}}(&{{.ReceiverAlias}}.{{.Field}})`,
@@ -48,10 +47,10 @@ var fieldTemplate = map[int]string{
 		}
 	}`,
 	decodeSliceStructType: `	var {{.TransientVar}} = coder.Alloc()
-	{{.ReceiverAlias}}.{{.Field}} = make({{.FieldType}},{{.TransientVar}})
+	{{.ReceiverAlias}}.{{.Field}} = make([]{{if not .PointerNeeded}}*{{end}}{{.FieldType}},{{.TransientVar}})
 	for i:=0; i < int({{.TransientVar}}) ; i++ {
 		tmp := 	{{.FieldType}}{}
-		if err := coder.{{.Method}}({{if not .PointerNeeded}}&{{end}}tmp);err != nil {
+		if err := coder.{{.Method}}(&tmp);err != nil {
 			return nil
 		}
 		{{.ReceiverAlias}}.{{.Field}}[i] = {{if not .PointerNeeded}}&{{end}}tmp
@@ -75,9 +74,6 @@ var fieldTemplate = map[int]string{
 //return nil
 //}
 //}
-
-
-
 
 const (
 	fileCode = iota
