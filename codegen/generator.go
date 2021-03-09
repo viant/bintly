@@ -125,154 +125,218 @@ func generateCoding(sess *session, typeName string, isDecoder bool, fn fieldGene
 	var codings = make([]string, 0)
 	fields := typeInfo.Fields()
 	for _, field := range fields {
-		receiverAlias := strings.ToLower(typeName[0:1])
-		fieldType := sess.Type(getBaseFieldType(field.TypeName))
 
+		receiverAlias := strings.ToLower(typeName[0:1])
+		var generated bool
+		var err error
 		// base type
-		if isBaseType(field.TypeName) {
-			method := genCodingMethod(field.TypeName, field.IsPointer, field.IsSlice)
-			code, err := expandFieldTemplate(baseTemplate, templateParameters{
-				Method:        method,
-				Field:         field.Name,
-				ReceiverAlias: receiverAlias,
-			})
-			if err != nil {
-				return "", err
-			}
-			codings = append(codings, code)
+		if generated, err = generateBaseType(field, baseTemplate, receiverAlias, &codings); err != nil {
+			return "", err
+		}
+		if generated {
 			continue
 		}
 
 		// derived type
-		baseType, err := getBaseDerivedType(sess, field.TypeName)
-		if baseType != "" {
-			method := genCodingMethod(baseType, field.IsPointer, field.IsSlice)
-			code, err := expandFieldTemplate(derivedTemplate, templateParameters{
-				Method:        method,
-				Field:         field.Name,
-				FieldType:     field.TypeName,
-				ReceiverAlias: receiverAlias,
-				TransientVar:  toolbox.ToCaseFormat(field.Name, toolbox.CaseUpperCamel, toolbox.CaseLowerCamel),
-				BaseType:      baseType,
-			})
-			if err != nil {
-				return "", err
-			}
-			codings = append(codings, code)
+		if generated, err = generateDerivedType(sess, err, field, derivedTemplate, receiverAlias, &codings); err != nil {
+			return "", err
+		}
+		if generated {
 			continue
 		}
 
 		// base slice type
-		sliceType, err := getBaseSliceType(sess, field.TypeName)
-		if sliceType != "" {
-			method := genCodingMethod("[]"+sliceType, false, true)
-			code, err := expandFieldTemplate(baseSliceTemplate, templateParameters{
-				Method:        method,
-				Field:         field.Name,
-				FieldType:     field.TypeName,
-				ReceiverAlias: receiverAlias,
-				TransientVar:  toolbox.ToCaseFormat(field.Name, toolbox.CaseUpperCamel, toolbox.CaseLowerCamel),
-				BaseType:      sliceType,
-			})
-			if err != nil {
-				return "", err
-			}
-			codings = append(codings, code)
+		if generated, err = generateBaseSliceType(sess, err, field, baseSliceTemplate, receiverAlias, &codings); err != nil {
+			return "", err
+		}
+		if generated {
 			continue
 		}
-
 		// derived slice type
-		customSliceType, err := getDerivedSliceType(sess, field.TypeName)
-		if customSliceType != "" {
-			sess.addImport("unsafe")
-			method := genCodingMethod("[]"+customSliceType, false, true)
-			code, err := expandFieldTemplate(derivedSliceTemplate, templateParameters{
-				Method:        method,
-				Field:         field.Name,
-				FieldType:     field.TypeName,
-				ReceiverAlias: receiverAlias,
-				TransientVar:  toolbox.ToCaseFormat(field.Name, toolbox.CaseUpperCamel, toolbox.CaseLowerCamel),
-				BaseType:      customSliceType,
-			})
-			if err != nil {
-				return "", err
-			}
-			codings = append(codings, code)
+		if generated, err = generateDerivedSliceType(sess, err, field, derivedSliceTemplate, receiverAlias, &codings); err != nil {
+			return "", err
+		}
+		if generated {
 			continue
 		}
 
 		// struct type
+		fieldType := sess.Type(getBaseFieldType(field.TypeName))
 		if fieldType == nil {
 			return "", fmt.Errorf("unsupported field type %v for field %v", fieldType, field)
 		}
-		if isStruct(fieldType) && !field.IsSlice && !field.IsPointerComponent {
-			if err = generateStructCoding(sess, fieldType.Name); err != nil {
-				return "", err
-			}
-
-			code, err := expandFieldTemplate(structTemplate, templateParameters{
-				Method:        "Coder",
-				Field:         field.Name,
-				FieldType:     field.TypeName,
-				ReceiverAlias: receiverAlias,
-				PointerNeeded: !field.IsPointer,
-			})
-			if err != nil {
-				return "", err
-			}
-			codings = append(codings, code)
+		if generated, err = generateStructType(sess, fieldType, field, err, structTemplate, receiverAlias, &codings); err != nil {
+			return "", err
+		}
+		if generated {
 			continue
-
 		}
 
 		// struct slice
-		if field.IsSlice && isInlineSliceType(field.TypeName) {
-			if err = generateStructCoding(sess, field.ComponentType); err != nil {
-				return "", err
-			}
-			fieldTypeName := field.ComponentType
-			code, err := expandFieldTemplate(customSliceTemplate, templateParameters{
-				Method:        "Coder",
-				Field:         field.Name,
-				FieldType:     fieldTypeName,
-				ReceiverAlias: receiverAlias,
-				TransientVar:  toolbox.ToCaseFormat(field.Name, toolbox.CaseUpperCamel, toolbox.CaseLowerCamel),
-				PointerNeeded: !field.IsPointerComponent,
-			})
-			if err != nil {
-				return "", err
-			}
-			codings = append(codings, code)
+		if generated, err = generateSliceOfStruct(sess, field, err, customSliceTemplate, receiverAlias, &codings); err != nil {
+			return "", err
+		}
+		if generated {
 			continue
 		}
 
 		// alias slice
-		if fieldType.IsSlice && !isInlineSliceType(field.TypeName) {
-			if err = generateStructCoding(sess, fieldType.Name); err != nil {
-				return "", err
-			}
-
-			code, err := expandFieldTemplate(enbeddedAliasSliceTemplate, templateParameters{
-				Method:        "Coder",
-				Field:         field.Name,
-				ReceiverAlias: receiverAlias,
-				PointerNeeded: !field.IsPointerComponent,
-			})
-			if err != nil {
-				return "", err
-			}
-			codings = append(codings, code)
-			continue
-
+		if generated,err = generateSliceAlias(sess, fieldType, field, err, enbeddedAliasSliceTemplate, receiverAlias, &codings); err != nil {
+			return "",err
 		}
-
+		if generated {
+			continue
+		}
 		code, err := fn(sess, field)
 		if err != nil {
 			return "", err
 		}
 		codings = append(codings, code)
+
 	}
 	return strings.Join(codings, "\n"), nil
+}
+
+func generateSliceAlias(sess *session, fieldType *toolbox.TypeInfo, field *toolbox.FieldInfo, err error, enbeddedAliasSliceTemplate int, receiverAlias string, codings *[]string) (bool, error) {
+	if fieldType.IsSlice && !isInlineSliceType(field.TypeName) {
+		if err = generateStructCoding(sess, fieldType.ComponentType); err != nil {
+			return false, err
+		}
+		code, err := expandFieldTemplate(enbeddedAliasSliceTemplate, templateParameters{
+			Method:        "Coder",
+			Field:         field.Name,
+			ReceiverAlias: receiverAlias,
+			PointerNeeded: !field.IsPointerComponent,
+		})
+		if err != nil {
+			return false, err
+		}
+		*codings = append(*codings, code)
+	}
+	return true, nil
+}
+
+func generateSliceOfStruct(sess *session, field *toolbox.FieldInfo, err error, customSliceTemplate int, receiverAlias string, codings *[]string) (bool, error) {
+	if field.IsSlice && isInlineSliceType(field.TypeName) {
+		if err = generateStructCoding(sess, field.ComponentType); err != nil {
+			return false, err
+		}
+		fieldTypeName := field.ComponentType
+		code, err := expandFieldTemplate(customSliceTemplate, templateParameters{
+			Method:        "Coder",
+			Field:         field.Name,
+			FieldType:     fieldTypeName,
+			ReceiverAlias: receiverAlias,
+			TransientVar:  toolbox.ToCaseFormat(field.Name, toolbox.CaseUpperCamel, toolbox.CaseLowerCamel),
+			PointerNeeded: !field.IsPointerComponent,
+		})
+		if err != nil {
+			return false, err
+		}
+		*codings = append(*codings, code)
+	}
+	return true, nil
+}
+
+func generateStructType(sess *session, fieldType *toolbox.TypeInfo, field *toolbox.FieldInfo, err error, structTemplate int, receiverAlias string, codings *[]string) (bool, error) {
+	if isStruct(fieldType) && !field.IsSlice && !field.IsPointerComponent {
+		if err = generateStructCoding(sess, fieldType.Name); err != nil {
+			return false, err
+		}
+		code, err := expandFieldTemplate(structTemplate, templateParameters{
+			Method:        "Coder",
+			Field:         field.Name,
+			FieldType:     field.TypeName,
+			ReceiverAlias: receiverAlias,
+			PointerNeeded: !field.IsPointer,
+		})
+		if err != nil {
+			return false, err
+		}
+		*codings = append(*codings, code)
+	}
+	return true, nil
+}
+
+func generateDerivedSliceType(sess *session, err error, field *toolbox.FieldInfo, derivedSliceTemplate int, receiverAlias string, codings *[]string) (bool, error) {
+	customSliceType, err := getDerivedSliceType(sess, field.TypeName)
+	if customSliceType == "" {
+		return false, nil
+	}
+	sess.addImport("unsafe")
+	method := genCodingMethod("[]"+customSliceType, false, true)
+	code, err := expandFieldTemplate(derivedSliceTemplate, templateParameters{
+		Method:        method,
+		Field:         field.Name,
+		FieldType:     field.TypeName,
+		ReceiverAlias: receiverAlias,
+		TransientVar:  toolbox.ToCaseFormat(field.Name, toolbox.CaseUpperCamel, toolbox.CaseLowerCamel),
+		BaseType:      customSliceType,
+	})
+	if err != nil {
+		return false, err
+	}
+	*codings = append(*codings, code)
+	return true, nil
+}
+
+func generateBaseSliceType(sess *session, err error, field *toolbox.FieldInfo, baseSliceTemplate int, receiverAlias string, codings *[]string) (bool, error) {
+	sliceType, err := getBaseSliceType(sess, field.TypeName)
+	if sliceType == "" {
+		return false, nil
+	}
+	method := genCodingMethod("[]"+sliceType, false, true)
+	code, err := expandFieldTemplate(baseSliceTemplate, templateParameters{
+		Method:        method,
+		Field:         field.Name,
+		FieldType:     field.TypeName,
+		ReceiverAlias: receiverAlias,
+		TransientVar:  toolbox.ToCaseFormat(field.Name, toolbox.CaseUpperCamel, toolbox.CaseLowerCamel),
+		BaseType:      sliceType,
+	})
+	if err != nil {
+		return false, err
+	}
+	*codings = append(*codings, code)
+	return true, nil
+}
+
+func generateDerivedType(sess *session, err error, field *toolbox.FieldInfo, derivedTemplate int, receiverAlias string, codings *[]string) (bool, error) {
+	baseType, err := getBaseDerivedType(sess, field.TypeName)
+	if baseType == "" {
+		return false, nil
+	}
+	method := genCodingMethod(baseType, field.IsPointer, field.IsSlice)
+	code, err := expandFieldTemplate(derivedTemplate, templateParameters{
+		Method:        method,
+		Field:         field.Name,
+		FieldType:     field.TypeName,
+		ReceiverAlias: receiverAlias,
+		TransientVar:  toolbox.ToCaseFormat(field.Name, toolbox.CaseUpperCamel, toolbox.CaseLowerCamel),
+		BaseType:      baseType,
+	})
+	if err != nil {
+		return false, err
+	}
+	*codings = append(*codings, code)
+	return true, nil
+}
+
+func generateBaseType(field *toolbox.FieldInfo, baseTemplate int, receiverAlias string, codings *[]string) (bool, error) {
+	if !isBaseType(field.TypeName) {
+		return false, nil
+	}
+	method := genCodingMethod(field.TypeName, field.IsPointer, field.IsSlice)
+	code, err := expandFieldTemplate(baseTemplate, templateParameters{
+		Method:        method,
+		Field:         field.Name,
+		ReceiverAlias: receiverAlias,
+	})
+	if err != nil {
+		return false, err
+	}
+	*codings = append(*codings, code)
+	return true, nil
 }
 
 func isInlineSliceType(fieldType string) bool {
@@ -345,6 +409,9 @@ func genCodingMethod(baseType string, IsPointer bool, IsSlice bool) string {
 }
 
 func getBaseFieldType(fieldType string) string {
+	if !strings.Contains(fieldType,"[]") {
+		return fieldType
+	}
 	if fieldType[0:3] == "[]*" {
 		return fieldType[3:]
 	}

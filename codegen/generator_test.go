@@ -50,7 +50,7 @@ func TestGen(t *testing.T) {
 		},
 	}
 
-	for _, useCase := range useCases[0:1] {
+	for _, useCase := range useCases[3:4] {
 		err := Generate(useCase.options)
 		assert.Nil(t, err, useCase.hasError)
 
