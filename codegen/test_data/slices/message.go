@@ -8,7 +8,7 @@ type SubMessage struct {
 type SubMessages []SubMessage
 
 type Message struct {
-	M1 []SubMessage
-	M2 []*SubMessage
+	//M1 []SubMessage
+	//M2 []*SubMessage
 	SubMessages
 }

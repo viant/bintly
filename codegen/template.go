@@ -55,42 +55,16 @@ var fieldTemplate = map[int]string{
 			return nil
 		}
 	}`,
-	encodeEmbeddedAliasTemplate: `	var tmp = len(*{{.ReceiverAlias}})
-	coder.Alloc(int32(tmp)
-	for i:=0; i < tmp ; i++ {
-		if err := coder.{{.Method}}(&(*{{.ReceiverAlias}})[i]);err !=nil {
-			return nil
-		}
-	}
+	encodeEmbeddedAliasTemplate: `	err := coder.Coder(&{{.ReceiverAlias}}.{{.Field}})
 	`,
-	decodeEmbeddedAliasSliceTemplate: `	var tmp = coder.Alloc()
-	*s = make([]{{.Field}},tmp)
-	for i:=0; i < int(tmp) ; i++ {
-		tmp := 	{{.Field}}{}
-		if err := coder.{{.Method}}(&(*{{.ReceiverAlias}})[i]);err !=nil {
-			return nil
-		}
-		(*{{.ReceiverAlias}})[i] = tmp
-	}
+	decodeEmbeddedAliasSliceTemplate: `		err := coder.Coder(&{{.ReceiverAlias}}.{{.Field}})
 	`,
 }
-
-//func (s *SubMessages) DecodeBinary(coder *bintly.Reader) error  {
-//	var tmp = coder.Alloc()
-//	*s = make([]SubMessage,tmp)
-//	for i:=0; i < int(tmp) ; i++ {
-//		tmp := 	SubMessage{}
-//		if err := coder.Coder(&(*s)[i]);err != nil {
-//			return nil
-//		}
-//		(*s)[i] = tmp
-//	}
-//	return nil
-//}
 
 const (
 	fileCode = iota
 	codingStructType
+	codingSliceType
 )
 
 var blockTemplate = map[int]string{
@@ -111,6 +85,30 @@ func ({{.Receiver}}) EncodeBinary(coder *bintly.Writer) error {
 }
 func ({{.Receiver}}) DecodeBinary(coder *bintly.Reader) error {
 {{.DecodingCases}}	
+	return nil
+}
+`,
+	codingSliceType: `func ({{.ReceiverAlias}} *{{.SliceType}}) EncodeBinary(coder *bintly.Writer) error {
+	var size = len(*{{.ReceiverAlias}})
+	coder.Alloc(int32(size))
+	for i:=0; i < size ; i++ {
+		if err := coder.Coder(&(*{{.ReceiverAlias}})[i]);err !=nil {
+			return nil
+		}
+	}
+	return nil
+}
+
+func ({{.ReceiverAlias}} *{{.SliceType}}) DecodeBinary(coder *bintly.Reader) error  {
+	var tmp = coder.Alloc()
+	*{{.ReceiverAlias}} = make([]sss,tmp)
+	for i:=0; i < int(tmp) ; i++ {
+		tmp := 	sss{}
+		if err := coder.Coder(&(*{{.ReceiverAlias}})[i]);err != nil {
+			return nil
+		}
+		(*{{.ReceiverAlias}})[i] = tmp
+	}
 	return nil
 }
 `,
