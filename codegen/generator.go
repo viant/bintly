@@ -108,6 +108,7 @@ func generateCoding(sess *session, typeName string, isDecoder bool, fn fieldGene
 	derivedSliceTemplate := encodeCustomSliceType
 	structTemplate := encodeStructType
 	customSliceTemplate := encodeSliceStructType
+	enbeddedAliasSliceTemplate := encodeEmbeddedAliasTemplate
 	if isDecoder {
 		baseTemplate = decodeBaseType
 		derivedTemplate = decodeDerivedBaseType
@@ -115,6 +116,7 @@ func generateCoding(sess *session, typeName string, isDecoder bool, fn fieldGene
 		derivedSliceTemplate = decodeCustomSliceType
 		structTemplate = decodeStructType
 		customSliceTemplate = decodeSliceStructType
+		enbeddedAliasSliceTemplate = decodeEmbeddedAliasSliceTemplate
 	}
 	typeInfo := sess.Type(typeName)
 	if typeInfo == nil {
@@ -124,6 +126,7 @@ func generateCoding(sess *session, typeName string, isDecoder bool, fn fieldGene
 	fields := typeInfo.Fields()
 	for _, field := range fields {
 		receiverAlias := strings.ToLower(typeName[0:1])
+		fieldType := sess.Type(getBaseFieldType(field.TypeName))
 
 		// base type
 		if isBaseType(field.TypeName) {
@@ -199,7 +202,6 @@ func generateCoding(sess *session, typeName string, isDecoder bool, fn fieldGene
 		}
 
 		// struct type
-		fieldType := sess.Type(getBaseFieldType(field.TypeName))
 		if fieldType == nil {
 			return "", fmt.Errorf("unsupported field type %v for field %v", fieldType, field)
 		}
@@ -207,19 +209,13 @@ func generateCoding(sess *session, typeName string, isDecoder bool, fn fieldGene
 			if err = generateStructCoding(sess, fieldType.Name); err != nil {
 				return "", err
 			}
-			var isPointerStruct = true
-			if isStruct(fieldType) {
-				isPointerStruct = field.IsPointer
-			}
-			if field.IsSlice {
-				isPointerStruct = field.IsPointerComponent
-			}
+
 			code, err := expandFieldTemplate(structTemplate, templateParameters{
 				Method:        "Coder",
 				Field:         field.Name,
 				FieldType:     field.TypeName,
 				ReceiverAlias: receiverAlias,
-				PointerNeeded: isPointerStruct,
+				PointerNeeded: !field.IsPointer,
 			})
 			if err != nil {
 				return "", err
@@ -230,7 +226,7 @@ func generateCoding(sess *session, typeName string, isDecoder bool, fn fieldGene
 		}
 
 		// struct slice
-		if isStruct(fieldType) && field.IsSlice {
+		if fieldType.IsSlice && isInlineSliceType(field.TypeName) {
 			if err = generateStructCoding(sess, fieldType.Name); err != nil {
 				return "", err
 			}
@@ -251,6 +247,25 @@ func generateCoding(sess *session, typeName string, isDecoder bool, fn fieldGene
 			}
 			codings = append(codings, code)
 			continue
+		}
+
+		// alias slice
+		if fieldType.IsSlice && !isInlineSliceType(field.TypeName) {
+			if err = generateStructCoding(sess, fieldType.Name); err != nil {
+				return "", err
+			}
+
+			code, err := expandFieldTemplate(enbeddedAliasSliceTemplate, templateParameters{
+				Method:        "Coder",
+				Field:         field.Name,
+				ReceiverAlias: receiverAlias,
+				PointerNeeded: !field.IsPointerComponent,
+			})
+			if err != nil {
+				return "", err
+			}
+			codings = append(codings, code)
+			continue
 
 		}
 
@@ -261,6 +276,10 @@ func generateCoding(sess *session, typeName string, isDecoder bool, fn fieldGene
 		codings = append(codings, code)
 	}
 	return strings.Join(codings, "\n"), nil
+}
+
+func isInlineSliceType(fieldType string) bool {
+	return strings.Contains(fieldType, "[]")
 }
 
 func getBaseDerivedType(s *session, typeName string) (string, error) {

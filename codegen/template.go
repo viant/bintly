@@ -19,6 +19,8 @@ const (
 	decodeStructType
 	encodeSliceStructType
 	decodeSliceStructType
+	encodeEmbeddedAliasTemplate
+	decodeEmbeddedAliasSliceTemplate
 )
 
 var fieldTemplate = map[int]string{
@@ -49,30 +51,41 @@ var fieldTemplate = map[int]string{
 	decodeSliceStructType: `	var {{.TransientVar}} = coder.Alloc()
 	{{.ReceiverAlias}}.{{.Field}} = make([]{{if not .PointerNeeded}}*{{end}}{{.FieldType}},{{.TransientVar}})
 	for i:=0; i < int({{.TransientVar}}) ; i++ {
-		tmp := 	{{.FieldType}}{}
-		if err := coder.{{.Method}}(&tmp);err != nil {
+		if err := coder.{{.Method}}({{if .PointerNeeded}}&{{end}}{{.ReceiverAlias}}.{{.Field}}[i]);err != nil {
 			return nil
 		}
-		{{.ReceiverAlias}}.{{.Field}}[i] = {{if not .PointerNeeded}}&{{end}}tmp
 	}`,
+	encodeEmbeddedAliasTemplate: `	var tmp = len(*{{.ReceiverAlias}})
+	coder.Alloc(int32(tmp)
+	for i:=0; i < tmp ; i++ {
+		if err := coder.{{.Method}}(&(*{{.ReceiverAlias}})[i]);err !=nil {
+			return nil
+		}
+	}
+	`,
+	decodeEmbeddedAliasSliceTemplate: `	var tmp = coder.Alloc()
+	*s = make([]{{.Field}},tmp)
+	for i:=0; i < int(tmp) ; i++ {
+		tmp := 	{{.Field}}{}
+		if err := coder.{{.Method}}(&(*{{.ReceiverAlias}})[i]);err !=nil {
+			return nil
+		}
+		(*{{.ReceiverAlias}})[i] = tmp
+	}
+	`,
 }
 
-//var m1Size = coder.Alloc()
-//m.M1 = make([] SubMessage,m1Size)
-//for i:= 0; i <= int(m1Size) ;i++ {
-//sm := SubMessage{}
-//if err := coder.Coder(&sm);err !=nil {
-//return nil
-//}
-//m.M1[i] = sm
-//}
-
-//var m1Size = len(m.M1)
-//coder.Alloc(int32(m1Size))
-//for i:=0 ; i < m1Size;i++ {
-//if err := coder.Coder(&m.M1[i]);err !=nil {
-//return nil
-//}
+//func (s *SubMessages) DecodeBinary(coder *bintly.Reader) error  {
+//	var tmp = coder.Alloc()
+//	*s = make([]SubMessage,tmp)
+//	for i:=0; i < int(tmp) ; i++ {
+//		tmp := 	SubMessage{}
+//		if err := coder.Coder(&(*s)[i]);err != nil {
+//			return nil
+//		}
+//		(*s)[i] = tmp
+//	}
+//	return nil
 //}
 
 const (

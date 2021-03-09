@@ -21,7 +21,7 @@ func TestGen(t *testing.T) {
 			options: &Options{
 				Source: path.Join(parent, "slices"),
 				Types:  []string{"Message"},
-				Dest:   path.Join(parent, "slices","message_enc.go"),
+				Dest:   path.Join(parent, "slices", "message_enc.go"),
 			},
 		},
 		{
@@ -29,7 +29,7 @@ func TestGen(t *testing.T) {
 			options: &Options{
 				Source: path.Join(parent, "messages"),
 				Types:  []string{"Message"},
-				Dest:   path.Join(parent, "messages","message_enc.go"),
+				Dest:   path.Join(parent, "messages", "message_enc.go"),
 			},
 		},
 		{
@@ -37,7 +37,7 @@ func TestGen(t *testing.T) {
 			options: &Options{
 				Source: path.Join(parent, "basic_struct"),
 				Types:  []string{"Message"},
-				Dest:   path.Join(parent, "basic_struct","basic_struct.go"),
+				Dest:   path.Join(parent, "basic_struct", "basic_struct.go"),
 			},
 		},
 		{
@@ -45,12 +45,12 @@ func TestGen(t *testing.T) {
 			options: &Options{
 				Source: path.Join(parent, "primitive_alias"),
 				Types:  []string{"Message"},
-				Dest:   path.Join(parent, "primitive_alias","primitive_alias.go"),
+				Dest:   path.Join(parent, "primitive_alias", "primitive_alias.go"),
 			},
 		},
 	}
 
-	for _, useCase := range useCases[0:1] {
+	for _, useCase := range useCases[1:2] {
 		err := Generate(useCase.options)
 		assert.Nil(t, err, useCase.hasError)
 
