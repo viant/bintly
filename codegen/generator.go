@@ -39,10 +39,20 @@ func Generate(options *Options) error {
 			return err
 		}
 	}
+
+	prefix, err := expandBlockTemplate(fileCode, struct {
+		Pkg     string
+		Code    string
+		Imports string
+	}{session.pkg, "", session.getImports()})
+	if err != nil {
+		return err
+	}
+
 	dest := session.Dest
-	err = ioutil.WriteFile(dest, []byte(strings.Join(session.structCodingCode, "")), 0644)
+	err = ioutil.WriteFile(dest, []byte(prefix+strings.Join(session.structCodingCode, "")), 0644)
 	session.structCodingCode = []string{}
-	return nil
+	return err
 
 }
 
@@ -69,22 +79,9 @@ func generateStructCoding(session *session, typeName string) error {
 	if err != nil {
 		return err
 	}
-	if !session.isBlockTemplateDone {
-		session.isBlockTemplateDone = true
-		code, err = expandBlockTemplate(fileCode, struct {
-			Pkg     string
-			Code    string
-			Imports string
-		}{session.pkg, code, session.getImports()})
-	}
-
 	session.structCodingCode = append(session.structCodingCode, code)
-	//
-	if session.Dest == "" {
-		fmt.Print(session.structCodingCode)
-		return nil
-	}
-	return err
+
+	return nil
 }
 
 func generateStructEncoding(sess *session, typeName string) (string, error) {
@@ -181,8 +178,8 @@ func generateCoding(sess *session, typeName string, isDecoder bool, fn fieldGene
 		}
 
 		// alias slice
-		if generated,err = generateSliceAlias(sess, fieldType, field, err, enbeddedAliasSliceTemplate, receiverAlias, &codings); err != nil {
-			return "",err
+		if generated, err = generateSliceAlias(sess, fieldType, field, err, enbeddedAliasSliceTemplate, receiverAlias, &codings); err != nil {
+			return "", err
 		}
 		if generated {
 			continue
@@ -409,7 +406,7 @@ func genCodingMethod(baseType string, IsPointer bool, IsSlice bool) string {
 }
 
 func getBaseFieldType(fieldType string) string {
-	if !strings.Contains(fieldType,"[]") {
+	if !strings.Contains(fieldType, "[]") {
 		return fieldType
 	}
 	if fieldType[0:3] == "[]*" {
