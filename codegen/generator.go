@@ -226,14 +226,11 @@ func generateCoding(sess *session, typeName string, isDecoder bool, fn fieldGene
 		}
 
 		// struct slice
-		if fieldType.IsSlice && isInlineSliceType(field.TypeName) {
-			if err = generateStructCoding(sess, fieldType.Name); err != nil {
+		if field.IsSlice && isInlineSliceType(field.TypeName) {
+			if err = generateStructCoding(sess, field.ComponentType); err != nil {
 				return "", err
 			}
-			fieldTypeName := field.TypeName[2:]
-			if field.IsPointerComponent {
-				fieldTypeName = field.TypeName[3:]
-			}
+			fieldTypeName := field.ComponentType
 			code, err := expandFieldTemplate(customSliceTemplate, templateParameters{
 				Method:        "Coder",
 				Field:         field.Name,
