@@ -17,11 +17,19 @@ func TestGen(t *testing.T) {
 		hasError    bool
 	}{
 		{
+			description: "slice  types",
+			options: &Options{
+				Source: path.Join(parent, "slices"),
+				Types:  []string{"Message"},
+				Dest:   path.Join(parent, "slices","message_enc.go"),
+			},
+		},
+		{
 			description: "message  types",
 			options: &Options{
 				Source: path.Join(parent, "messages"),
 				Types:  []string{"Message"},
-				Dest:   path.Join(parent, "messages"),
+				Dest:   path.Join(parent, "messages","message_enc.go"),
 			},
 		},
 		{
@@ -29,7 +37,7 @@ func TestGen(t *testing.T) {
 			options: &Options{
 				Source: path.Join(parent, "basic_struct"),
 				Types:  []string{"Message"},
-				Dest:   path.Join(parent, "basic_struct"),
+				Dest:   path.Join(parent, "basic_struct","basic_struct.go"),
 			},
 		},
 		{
@@ -37,7 +45,7 @@ func TestGen(t *testing.T) {
 			options: &Options{
 				Source: path.Join(parent, "primitive_alias"),
 				Types:  []string{"Message"},
-				Dest:   path.Join(parent, "primitive_alias"),
+				Dest:   path.Join(parent, "primitive_alias","primitive_alias.go"),
 			},
 		},
 	}

@@ -14,6 +14,7 @@ type session struct {
 	structCodingCode []string
 	generatedTypes   map[string]bool
 	imports          map[string]bool
+	isBlockTemplateDone bool
 }
 
 func (s *session) shallGenerateCode(typeName string) bool {

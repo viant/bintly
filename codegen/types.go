@@ -21,3 +21,7 @@ type baseType struct {
 func isStruct(aType *toolbox.TypeInfo) bool {
 	return len(aType.Fields()) > 0
 }
+
+func isSliceOfStruct(aType *toolbox.TypeInfo) bool {
+	return len(aType.Fields()) > 0 && aType.IsSlice
+}
