@@ -17,7 +17,6 @@ type templateParameters struct {
 	TransientVar  string
 	BaseType      string
 	PointerNeeded bool
-	CompType      string
 }
 
 func Generate(options *Options) error {
@@ -213,7 +212,7 @@ func generateSliceAlias(sess *session, fieldType *toolbox.TypeInfo, field *toolb
 			Field:         field.Name,
 			ReceiverAlias: receiverAlias,
 			PointerNeeded: !field.IsPointer,
-			FieldType:     fieldType.ComponentType,
+			FieldType:     field.TypeName,
 		})
 		if err != nil {
 			return false, err

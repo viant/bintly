@@ -55,7 +55,7 @@ var fieldTemplate = map[int]string{
 			return nil
 		}
 	}`,
-	encodeEmbeddedAliasTemplate: `	{{if not .PointerNeeded}}{{.ReceiverAlias}}.{{.Field}} = &{{.Field}}{}{{end}}
+	encodeEmbeddedAliasTemplate: `	{{if not .PointerNeeded}}{{.ReceiverAlias}}.{{.Field}} = &{{.FieldType}}{}{{end}}
 	if err := coder.Coder({{if .PointerNeeded}}&{{end}}{{.ReceiverAlias}}.{{.Field}}); err !=nil {
 	return err
 	}`,
