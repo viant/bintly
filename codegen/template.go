@@ -57,12 +57,10 @@ var fieldTemplate = map[int]string{
 	}`,
 	encodeEmbeddedAliasTemplate: `	if err := coder.Coder(&{{.ReceiverAlias}}.{{.Field}}); err !=nil {
 	return err
-	}
-	`,
+	}`,
 	decodeEmbeddedAliasSliceTemplate: `		if err := coder.Coder(&{{.ReceiverAlias}}.{{.Field}}); err != nil {
 		return err
-	}
-	`,
+	}`,
 }
 
 const (
@@ -96,7 +94,7 @@ func ({{.Receiver}}) DecodeBinary(coder *bintly.Reader) error {
 	var size = len(*{{.ReceiverAlias}})
 	coder.Alloc(int32(size))
 	for i:=0; i < size ; i++ {
-		if err := coder.Coder(&(*{{.ReceiverAlias}})[i]);err !=nil {
+		if err := coder.Coder({{if not .IsPointer}}&{{end}}(*{{.ReceiverAlias}})[i]);err !=nil {
 			return nil
 		}
 	}
@@ -105,10 +103,10 @@ func ({{.Receiver}}) DecodeBinary(coder *bintly.Reader) error {
 
 func ({{.ReceiverAlias}} *{{.SliceType}}) DecodeBinary(coder *bintly.Reader) error  {
 	var tmp = coder.Alloc()
-	*{{.ReceiverAlias}} = make([]{{.ComponentType}},tmp)
+	*{{.ReceiverAlias}} = make([]{{if .IsPointer}}*{{end}}{{.ComponentType}},tmp)
 	for i:=0; i < int(tmp) ; i++ {
-		tmp := 	{{.ComponentType}}{}
-		if err := coder.Coder(&(*{{.ReceiverAlias}})[i]);err != nil {
+		tmp := 	{{if .IsPointer}}&{{end}}{{.ComponentType}}{}
+		if err := coder.Coder({{if not .IsPointer}}&{{end}}(*{{.ReceiverAlias}})[i]);err != nil {
 			return nil
 		}
 		(*{{.ReceiverAlias}})[i] = tmp

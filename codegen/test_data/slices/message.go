@@ -6,9 +6,11 @@ type SubMessage struct {
 }
 
 type SubMessages []SubMessage
+type SubMessages2 []*SubMessage
 
 type Message struct {
 	//M1 []SubMessage
 	//M2 []*SubMessage
 	SubMessages
+	SubMessages2
 }
