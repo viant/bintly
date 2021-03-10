@@ -55,9 +55,13 @@ var fieldTemplate = map[int]string{
 			return nil
 		}
 	}`,
-	encodeEmbeddedAliasTemplate: `	err := coder.Coder(&{{.ReceiverAlias}}.{{.Field}})
+	encodeEmbeddedAliasTemplate: `	if err := coder.Coder(&{{.ReceiverAlias}}.{{.Field}}); err !=nil {
+	return err
+	}
 	`,
-	decodeEmbeddedAliasSliceTemplate: `		err := coder.Coder(&{{.ReceiverAlias}}.{{.Field}})
+	decodeEmbeddedAliasSliceTemplate: `		if err := coder.Coder(&{{.ReceiverAlias}}.{{.Field}}); err != nil {
+		return err
+	}
 	`,
 }
 
@@ -101,9 +105,9 @@ func ({{.Receiver}}) DecodeBinary(coder *bintly.Reader) error {
 
 func ({{.ReceiverAlias}} *{{.SliceType}}) DecodeBinary(coder *bintly.Reader) error  {
 	var tmp = coder.Alloc()
-	*{{.ReceiverAlias}} = make([]sss,tmp)
+	*{{.ReceiverAlias}} = make([]{{.ComponentType}},tmp)
 	for i:=0; i < int(tmp) ; i++ {
-		tmp := 	sss{}
+		tmp := 	{{.ComponentType}}{}
 		if err := coder.Coder(&(*{{.ReceiverAlias}})[i]);err != nil {
 			return nil
 		}

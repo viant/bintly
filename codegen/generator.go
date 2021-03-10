@@ -17,6 +17,7 @@ type templateParameters struct {
 	TransientVar  string
 	BaseType      string
 	PointerNeeded bool
+	CompType string
 }
 
 func Generate(options *Options) error {
@@ -178,7 +179,7 @@ func generateCoding(sess *session, typeName string, isDecoder bool, fn fieldGene
 		}
 
 		// alias slice
-		if generated, err = generateSliceAlias(sess, fieldType, field, err, enbeddedAliasSliceTemplate, receiverAlias, &codings, isDecoder); err != nil {
+		if generated, err = generateSliceAlias(sess, fieldType, field,  enbeddedAliasSliceTemplate, &codings); err != nil {
 			return "", err
 		}
 		if generated {
@@ -194,25 +195,23 @@ func generateCoding(sess *session, typeName string, isDecoder bool, fn fieldGene
 	return strings.Join(codings, "\n"), nil
 }
 
-func generateSliceAlias(sess *session, fieldType *toolbox.TypeInfo, field *toolbox.FieldInfo, err error, enbeddedAliasSliceTemplate int, receiverAlias string, codings *[]string, isDecoder bool) (bool, error) {
-	if isDecoder {
-		return true, nil
-	}
+func generateSliceAlias(sess *session, fieldType *toolbox.TypeInfo, field *toolbox.FieldInfo,  templateId int,  codings *[]string) (bool, error) {
+
 	if fieldType.IsSlice && !isInlineSliceType(field.TypeName) {
-		if err = generateStructCoding(sess, fieldType.ComponentType); err != nil {
+		if err := generateStructCoding(sess, fieldType.ComponentType); err != nil {
 			return false, err
 		}
 
 		var code string
-		err := generateSliceCoding(sess, field.TypeName, field.IsPointer)
+		err := generateSliceCoding(sess, field.TypeName, field.IsPointer, fieldType.ComponentType)
 		if err != nil {
 			return false, err
 		}
 
-		code, err = expandFieldTemplate(enbeddedAliasSliceTemplate, templateParameters{
+		code, err = expandFieldTemplate(templateId, templateParameters{
 			Method:        "Coder",
 			Field:         field.Name,
-			ReceiverAlias: receiverAlias,
+			ReceiverAlias: strings.ToLower(field.TypeName[0:1]),
 			//PointerNeeded: !field.IsPointerComponent,
 		})
 		if err != nil {
@@ -224,15 +223,20 @@ func generateSliceAlias(sess *session, fieldType *toolbox.TypeInfo, field *toolb
 	return false, nil
 }
 
-func generateSliceCoding(sess *session, typeName string, isPointer bool) error {
+func generateSliceCoding(sess *session, typeName string, isPointer bool,componentType string) error {
+	if ok := sess.shallGenerateCode(typeName); !ok {
+		return nil
+	}
 	code, err := expandBlockTemplate(codingSliceType, struct {
 		ReceiverAlias string
 		SliceType     string
 		IsPointer     bool
+		ComponentType string
 	}{
 		ReceiverAlias: strings.ToLower(typeName[0:1]),
 		SliceType:     typeName,
 		IsPointer:     isPointer,
+		ComponentType: componentType,
 	})
 	if err != nil {
 		return err
