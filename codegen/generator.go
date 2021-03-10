@@ -212,7 +212,8 @@ func generateSliceAlias(sess *session, fieldType *toolbox.TypeInfo, field *toolb
 			Method:        "Coder",
 			Field:         field.Name,
 			ReceiverAlias: receiverAlias,
-			//PointerNeeded: !field.IsPointerComponent,
+			PointerNeeded: !field.IsPointer,
+			FieldType:     fieldType.ComponentType,
 		})
 		if err != nil {
 			return false, err

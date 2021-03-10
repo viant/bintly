@@ -55,10 +55,11 @@ var fieldTemplate = map[int]string{
 			return nil
 		}
 	}`,
-	encodeEmbeddedAliasTemplate: `	if err := coder.Coder(&{{.ReceiverAlias}}.{{.Field}}); err !=nil {
+	encodeEmbeddedAliasTemplate: `	{{if not .PointerNeeded}}{{.ReceiverAlias}}.{{.Field}} = &{{.Field}}{}{{end}}
+	if err := coder.Coder({{if .PointerNeeded}}&{{end}}{{.ReceiverAlias}}.{{.Field}}); err !=nil {
 	return err
 	}`,
-	decodeEmbeddedAliasSliceTemplate: `		if err := coder.Coder(&{{.ReceiverAlias}}.{{.Field}}); err != nil {
+	decodeEmbeddedAliasSliceTemplate: `		if err := coder.Coder({{if .PointerNeeded}}&{{end}}{{.ReceiverAlias}}.{{.Field}}); err != nil {
 		return err
 	}`,
 }
