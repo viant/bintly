@@ -7,16 +7,22 @@ import (
 	"strings"
 )
 
+
+
 type fieldGenerator func(session *session, field *toolbox.FieldInfo) (string, error)
 
 type templateParameters struct {
-	Method        string
-	Field         string
-	FieldType     string
-	ReceiverAlias string
-	TransientVar  string
-	BaseType      string
-	PointerNeeded bool
+	Method         string
+	Field          string
+	FieldType      string
+	ReceiverAlias  string
+	TransientVar   string
+	BaseType       string
+	PointerNeeded  bool
+	KeyFieldType   string
+	ValueFieldType string
+	KeyMethod      string
+	ValueMethod    string
 }
 
 func Generate(options *Options) error {
@@ -106,6 +112,8 @@ func generateCoding(sess *session, typeName string, isDecoder bool, fn fieldGene
 	structTemplate := encodeStructType
 	customSliceTemplate := encodeSliceStructType
 	enbeddedAliasSliceTemplate := encodeEmbeddedAliasTemplate
+	baseMapTemplate := encodeBasicMapTemplate
+
 	if isDecoder {
 		baseTemplate = decodeBaseType
 		derivedTemplate = decodeDerivedBaseType
@@ -114,6 +122,7 @@ func generateCoding(sess *session, typeName string, isDecoder bool, fn fieldGene
 		structTemplate = decodeStructType
 		customSliceTemplate = decodeSliceStructType
 		enbeddedAliasSliceTemplate = decodeEmbeddedAliasSliceTemplate
+		baseMapTemplate = decodeBasicMapTemplate
 	}
 	typeInfo := sess.Type(typeName)
 	if typeInfo == nil {
@@ -153,16 +162,14 @@ func generateCoding(sess *session, typeName string, isDecoder bool, fn fieldGene
 		if generated, err = generateDerivedSliceType(sess, field, derivedSliceTemplate, receiverAlias, &codings); err != nil {
 			return "", err
 		}
+
 		if generated {
 			continue
 		}
 
 		// struct type
-		fieldType := sess.Type(getBaseFieldType(field.TypeName))
-		if fieldType == nil {
-			return "", fmt.Errorf("unsupported field type %v for field %v", fieldType, field)
-		}
-		if generated, err = generateStructType(sess, fieldType, field, structTemplate, receiverAlias, &codings); err != nil {
+
+		if generated, err = generateStructType(sess, field, structTemplate, receiverAlias, &codings); err != nil {
 			return "", err
 		}
 		if generated {
@@ -178,7 +185,15 @@ func generateCoding(sess *session, typeName string, isDecoder bool, fn fieldGene
 		}
 
 		// alias slice
-		if generated, err = generateSliceAlias(sess, fieldType, field, enbeddedAliasSliceTemplate, receiverAlias, &codings); err != nil {
+		if generated, err = generateSliceAlias(sess, field, enbeddedAliasSliceTemplate, receiverAlias, &codings); err != nil {
+			return "", err
+		}
+		if generated {
+			continue
+		}
+
+		// alias slice
+		if generated, err = generateMap(sess, field, baseMapTemplate, receiverAlias, &codings); err != nil {
 			return "", err
 		}
 		if generated {
@@ -194,8 +209,33 @@ func generateCoding(sess *session, typeName string, isDecoder bool, fn fieldGene
 	return strings.Join(codings, "\n"), nil
 }
 
-func generateSliceAlias(sess *session, fieldType *toolbox.TypeInfo, field *toolbox.FieldInfo, templateId int, receiverAlias string, codings *[]string) (bool, error) {
+func generateMap(sess *session,  field *toolbox.FieldInfo, templateId int, receiverAlias string, codings *[]string) (bool, error) {
 
+	if !field.IsMap {
+		return false, nil
+	}
+	keyMethod := getMapMethod(field.KeyTypeName)
+	valueMethod := getMapMethod(field.ValueTypeName)
+	code, err := expandFieldTemplate(templateId, templateParameters{
+		KeyMethod:     keyMethod,
+		ValueMethod: valueMethod,
+		KeyFieldType: field.KeyTypeName,
+		ValueFieldType: field.ValueTypeName,
+		Field:         field.Name,
+		ReceiverAlias: receiverAlias,
+	})
+	if err != nil {
+		return false, err
+	}
+	*codings = append(*codings, code)
+	return true, nil
+}
+
+func generateSliceAlias(sess *session, field *toolbox.FieldInfo, templateId int, receiverAlias string, codings *[]string) (bool, error) {
+	fieldType := sess.Type(field.TypeName)
+	if fieldType == nil {
+		return false, nil
+	}
 	if fieldType.IsSlice && !isInlineSliceType(field.TypeName) {
 		if err := generateStructCoding(sess, fieldType.ComponentType); err != nil {
 			return false, err
@@ -268,7 +308,12 @@ func generateSliceOfStruct(sess *session, field *toolbox.FieldInfo, customSliceT
 	return false, nil
 }
 
-func generateStructType(sess *session, fieldType *toolbox.TypeInfo, field *toolbox.FieldInfo, structTemplate int, receiverAlias string, codings *[]string) (bool, error) {
+func generateStructType(sess *session,  field *toolbox.FieldInfo, structTemplate int, receiverAlias string, codings *[]string) (bool, error) {
+
+	fieldType := sess.Type(getBaseFieldType(field.TypeName))
+	if fieldType == nil {
+		return false, nil
+	}
 	if isStruct(fieldType) && !field.IsSlice && !field.IsPointerComponent {
 		if err := generateStructCoding(sess, fieldType.Name); err != nil {
 			return false, err
@@ -450,4 +495,29 @@ func getBaseFieldType(fieldType string) string {
 		return fieldType[2:]
 	}
 	return fieldType
+}
+
+func getMapMethod(baseType string) string {
+	var isPointer bool
+	var isSlice bool
+	if strings.Contains(baseType,"*") {
+		baseType = strings.Replace(baseType,"*","",1)
+		isPointer = true
+	}
+	if strings.Contains(baseType,"[]") {
+		baseType = strings.Replace(baseType,"[]","",1)
+		isSlice = true
+	}
+
+	codingMethod := strings.Title(baseType)
+	if isPointer {
+		codingMethod += "Ptr"
+	}
+	if isSlice {
+		//codingMethod = codingMethod[2:]
+		codingMethod += "s"
+	}
+	return codingMethod
+
+
 }

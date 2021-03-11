@@ -16,6 +16,15 @@ func TestGen(t *testing.T) {
 		options     *Options
 		hasError    bool
 	}{
+
+		{
+			description: "map  types",
+			options: &Options{
+				Source: path.Join(parent, "maps"),
+				Types:  []string{"Message"},
+				Dest:   path.Join(parent, "maps", "message_enc.go"),
+			},
+		},
 		{
 			description: "slice  types",
 			options: &Options{

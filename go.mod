@@ -7,7 +7,7 @@ require (
 	github.com/go-errors/errors v1.1.1 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/stretchr/testify v1.7.0
-	github.com/viant/toolbox v0.33.2
+	github.com/viant/toolbox v0.33.3-0.20210310222200-464f64faf109
 	github.com/vmihailenco/msgpack v4.0.4+incompatible
 	golang.org/x/crypto v0.0.0-20210220033148-5ea612d1eb83 // indirect
 	golang.org/x/oauth2 v0.0.0-20210220000619-9bb904979d93 // indirect

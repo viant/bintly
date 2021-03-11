@@ -21,6 +21,8 @@ const (
 	decodeSliceStructType
 	encodeEmbeddedAliasTemplate
 	decodeEmbeddedAliasSliceTemplate
+	encodeBasicMapTemplate
+	decodeBasicMapTemplate
 )
 
 var fieldTemplate = map[int]string{
@@ -62,7 +64,27 @@ var fieldTemplate = map[int]string{
 	decodeEmbeddedAliasSliceTemplate: `		if err := coder.Coder({{if .PointerNeeded}}&{{end}}{{.ReceiverAlias}}.{{.Field}}); err != nil {
 		return err
 	}`,
+	encodeBasicMapTemplate: `	coder.Alloc(int32(len({{.ReceiverAlias}}.{{.Field}})))
+	for k, v := range {{.ReceiverAlias}}.{{.Field}} {
+		coder.{{.KeyMethod}}(k)
+		coder.{{.ValueMethod}}(v)
+	}`,
+	decodeBasicMapTemplate: `	 {
+		size := int(coder.Alloc())
+		if size == bintly.NilSize {
+			return nil
+		}
+		{{.ReceiverAlias}}.{{.Field}} = make(map[{{.KeyFieldType}}]{{.ValueFieldType}},size)
+		for i:=0 ; i < size ; i++ {
+			var k {{.KeyFieldType}}
+			var v {{.ValueFieldType}}
+			coder.{{.KeyMethod}}(&k)
+			coder.{{.ValueMethod}}(&v)
+			{{.ReceiverAlias}}.{{.Field}}[k]=v
+		}
+	}`,
 }
+
 
 const (
 	fileCode = iota
