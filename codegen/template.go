@@ -67,7 +67,7 @@ var fieldTemplate = map[int]string{
 	encodeBasicMapTemplate: `	coder.Alloc(int32(len({{.ReceiverAlias}}.{{.Field}})))
 	for k, v := range {{.ReceiverAlias}}.{{.Field}} {
 		coder.{{.KeyMethod}}(k)
-		coder.{{.ValueMethod}}(v)
+		coder.{{.ValueMethod}}(&v)
 	}`,
 	decodeBasicMapTemplate: `	 {
 		size := int(coder.Alloc())
@@ -84,7 +84,6 @@ var fieldTemplate = map[int]string{
 		}
 	}`,
 }
-
 
 const (
 	fileCode = iota
