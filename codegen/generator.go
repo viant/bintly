@@ -319,7 +319,7 @@ func generateStructType(sess *session, field *toolbox.FieldInfo, structTemplate 
 	if fieldType == nil {
 		return false, nil
 	}
-	if isStruct(fieldType) && !field.IsSlice && !field.IsPointerComponent {
+	if isStruct(fieldType) && !field.IsSlice && !field.IsMap && !field.IsPointerComponent {
 		if err := generateStructCoding(sess, fieldType.Name); err != nil {
 			return false, err
 		}
