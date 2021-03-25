@@ -5,11 +5,16 @@ type SubMessage struct {
 	Name string
 }
 
-type Map map[int][]string
+type SubMessages []SubMessage
 
 type Message struct {
-	M1 map[string]SubMessage
-	M2 map[string]*SubMessage
+	//M1 map[string]SubMessage
+	//M1 map[string]*SubMessage
+	M1 map[string][]SubMessage
+	//M2 map[string]*[]SubMessage
+
+
+//	M2 map[string][]SubMessage
 	//M0  map[string]int
 	//M1  map[int]*float32
 	//M2  map[string][]int

@@ -10,9 +10,9 @@ type SubMessages2 []*SubMessage
 
 type Message struct {
 	M1 []SubMessage
-	M2 []*SubMessage
-	M3 SubMessages
-	M4 *SubMessages
-	*SubMessages
-	SubMessages2
+	//M2 []*SubMessage
+	//M3 SubMessages
+	//M4 *SubMessages
+	//*SubMessages
+	//SubMessages2
 }

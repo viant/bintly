@@ -23,6 +23,8 @@ const (
 	decodeEmbeddedAliasSliceTemplate
 	encodeBasicMapTemplate
 	decodeBasicMapTemplate
+	encodeSliceMapTemplate
+	decodeSliceMapTemplate
 )
 
 var fieldTemplate = map[int]string{
@@ -67,7 +69,7 @@ var fieldTemplate = map[int]string{
 	encodeBasicMapTemplate: `	coder.Alloc(int32(len({{.ReceiverAlias}}.{{.Field}})))
 	for k, v := range {{.ReceiverAlias}}.{{.Field}} {
 		coder.{{.KeyMethod}}(k)
-		coder.{{.ValueMethod}}(&v)
+		coder.{{.ValueMethod}}({{if .PointerNeeded}}&{{end}}v)
 	}`,
 	decodeBasicMapTemplate: `	 {
 		size := int(coder.Alloc())
@@ -79,11 +81,45 @@ var fieldTemplate = map[int]string{
 			var k {{.KeyFieldType}}
 			var v {{.ValueFieldType}}
 			coder.{{.KeyMethod}}(&k)
-			coder.{{.ValueMethod}}(&v)
+			coder.{{.ValueMethod}}({{if .PointerNeeded}}&{{end}}v)
+			{{.ReceiverAlias}}.{{.Field}}[k]=v
+		}
+	}`,
+	encodeSliceMapTemplate: ` {	
+	coder.Alloc(int32(len({{.ReceiverAlias}}.{{.Field}})))
+	for k, v := range {{.ReceiverAlias}}.{{.Field}} {
+		coder.{{.KeyMethod}}(k)
+		var m1 = len(v)
+		coder.Alloc(int32(m1))
+		for i:=0; i< m1;i++ {
+			if err := coder.{{.ValueMethod}}({{if .PointerNeeded}}&{{end}}v[i]);err != nil {
+				return nil
+			}
+		}
+	}
+	}`,
+	decodeSliceMapTemplate: `	 {
+		size := int(coder.Alloc())
+		if size == bintly.NilSize {
+			return nil
+		}
+		{{.ReceiverAlias}}.{{.Field}} = make(map[{{.KeyFieldType}}]{{.ValueFieldType}},size)
+		for i:=0 ; i < size ; i++ {
+			var k {{.KeyFieldType}}
+			var v {{.ValueFieldType}}
+			coder.{{.KeyMethod}}(&k)
+			var m1 = coder.Alloc()
+			v = make({{.ValueFieldType}},m1)
+			for j:=0; j < int(m1); j++ {
+				if err := coder.{{.ValueMethod}}({{if .PointerNeeded}}&{{end}}v[j]);err !=nil {
+				 	return nil
+				}
+			}
 			{{.ReceiverAlias}}.{{.Field}}[k]=v
 		}
 	}`,
 }
+
 
 const (
 	fileCode = iota
