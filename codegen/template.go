@@ -79,7 +79,7 @@ var fieldTemplate = map[int]string{
 		{{.ReceiverAlias}}.{{.Field}} = make(map[{{.KeyFieldType}}]{{.ValueFieldType}},size)
 		for i:=0 ; i < size ; i++ {
 			var k {{.KeyFieldType}}
-			var v {{.ValueFieldType}}
+			var v ={{if .PointerMethod}}&{{end}}{{.BaseValueFieldType}}{}
 			coder.{{.KeyMethod}}(&k)
 			coder.{{.ValueMethod}}({{if .PointerNeeded}}&{{end}}v)
 			{{.ReceiverAlias}}.{{.Field}}[k]=v
@@ -108,10 +108,11 @@ var fieldTemplate = map[int]string{
 			var k {{.KeyFieldType}}
 			var v {{.ValueFieldType}}
 			coder.{{.KeyMethod}}(&k)
-			var m1 = coder.Alloc()
-			v = make({{.ValueFieldType}},m1)
-			for j:=0; j < int(m1); j++ {
-				if err := coder.{{.ValueMethod}}({{if .PointerNeeded}}&{{end}}v[j]);err !=nil {
+			var m1Size = coder.Alloc()
+			v = make({{.ValueFieldType}},m1Size)
+			for j:=0; j < int(m1Size); j++ {	
+				{{if .PointerMethod}}v[j]=&{{.BaseValueFieldType}}{}{{end}}
+				if err := coder.{{.ValueMethod}}({{if .PointerNeeded}}&{{end}}v[j]);err !=nil {	
 				 	return nil
 				}
 			}

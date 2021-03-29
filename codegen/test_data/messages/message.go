@@ -6,7 +6,7 @@ type SubMessage struct {
 }
 
 type Message struct {
-	M1 SubMessage
-	M2 *SubMessage
-	//*SubMessage
+	//M1 SubMessage
+	//M2 *SubMessage
+	SubMessage
 }

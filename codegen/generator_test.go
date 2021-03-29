@@ -3,6 +3,7 @@ package codegen
 import (
 	"github.com/stretchr/testify/assert"
 	"github.com/viant/toolbox"
+	"os"
 	"path"
 	"testing"
 )
@@ -10,7 +11,7 @@ import (
 func TestGen(t *testing.T) {
 
 	parent := path.Join(toolbox.CallerDirectory(3), "test_data")
-
+	os.Setenv("AST_DEBUG","1")
 	var useCases = []struct {
 		description string
 		options     *Options

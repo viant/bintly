@@ -10,28 +10,23 @@ import (
 type fieldGenerator func(session *session, field *toolbox.FieldInfo) (string, error)
 
 type templateParameters struct {
-	Method         string
-	Field          string
-	FieldType      string
-	ReceiverAlias  string
-	TransientVar   string
-	BaseType       string
-	PointerNeeded  bool
-	KeyFieldType   string
-	ValueFieldType string
-	KeyMethod      string
-	ValueMethod    string
-	CoderBlock     string
+	Method             string
+	Field              string
+	FieldType          string
+	ReceiverAlias      string
+	TransientVar       string
+	BaseType           string
+	PointerNeeded      bool
+	KeyFieldType       string
+	ValueFieldType     string
+	KeyMethod          string
+	ValueMethod        string
+	PointerMethod      bool
+	BaseValueFieldType string
 }
 
 func Generate(options *Options) error {
-
-	if err := options.Validate(); err != nil {
-		return err
-	}
 	session := newSession(options)
-
-	//
 	session.addImport("github.com/viant/bintly")
 	err := session.readPackageCode()
 	if err != nil {
@@ -209,6 +204,20 @@ func generateCoding(sess *session, typeName string, isDecoder bool, fn fieldGene
 			continue
 		}
 
+		if generated, err = generateEmbeddedMapType(sess, field, baseMapTemplate, receiverAlias, &codings); err != nil {
+			return "", err
+		}
+		if generated {
+			continue
+		}
+
+		if generated, err = generateEmbeddedMapSliceType(sess, field, baseSliceMapTemplate, receiverAlias, &codings); err != nil {
+			return "", err
+		}
+		if generated {
+			continue
+		}
+
 		code, err := fn(sess, field)
 		if err != nil {
 			return "", err
@@ -219,6 +228,90 @@ func generateCoding(sess *session, typeName string, isDecoder bool, fn fieldGene
 	return strings.Join(codings, "\n"), nil
 }
 
+func generateEmbeddedMapSliceType(sess *session, field *toolbox.FieldInfo, templateId int, alias string, codings *[]string) (bool, error) {
+	fieldType := sess.Type(field.TypeName)
+	if fieldType == nil {
+		return false, nil
+	}
+	if !fieldType.IsMap {
+		return false, nil
+	}
+	fValueTypeName := fieldType.ValueTypeName
+	keyMethod := getMapMethod(fieldType.KeyTypeName)
+	isPointer := isPointer(fValueTypeName)
+	pointerToSlice := isPointerToSlice(fValueTypeName)
+	if fValueTypeName[0:2] == "[]" {
+		fieldValueTypeName := getOriginalType(fValueTypeName)
+		valueFieldType := sess.Type(fieldValueTypeName)
+		if valueFieldType == nil {
+			return false, nil
+		}
+		if err := generateStructCoding(sess, fieldValueTypeName); err != nil {
+			return false, err
+		}
+		code, err := expandFieldTemplate(templateId, templateParameters{
+			KeyMethod: keyMethod,
+			//ValueMethod: valueMethod,
+			ValueMethod:        "Coder",
+			KeyFieldType:       fieldType.KeyTypeName,
+			ValueFieldType:     fieldType.ValueTypeName,
+			Field:              fieldType.Name,
+			ReceiverAlias:      alias,
+			PointerNeeded:      !isPointer,
+			PointerMethod:      pointerToSlice,
+			BaseValueFieldType: fieldValueTypeName,
+		})
+		if err != nil {
+			return false, err
+		}
+		*codings = append(*codings, code)
+		return true, nil
+
+	}
+
+	return false, nil
+
+}
+
+func generateEmbeddedMapType(sess *session, field *toolbox.FieldInfo, templateId int, alias string, codings *[]string) (bool, error) {
+	fieldType := sess.Type(field.TypeName)
+	if fieldType == nil {
+		return false, nil
+	}
+	if !fieldType.IsMap {
+		return false, nil
+	}
+	keyMethod := getMapMethod(fieldType.KeyTypeName)
+	isPointer := isPointer(fieldType.ValueTypeName)
+	valueFieldType := sess.Type(fieldType.ValueTypeName)
+	if valueFieldType != nil && fieldType.ValueTypeName[0:2] != "[]" {
+
+		if err := generateStructCoding(sess, valueFieldType.Name); err != nil {
+			return false, err
+		}
+		code, err := expandFieldTemplate(templateId, templateParameters{
+			KeyMethod: keyMethod,
+			//ValueMethod: valueMethod,
+			ValueMethod:        "Coder",
+			KeyFieldType:       fieldType.KeyTypeName,
+			ValueFieldType:     fieldType.ValueTypeName,
+			Field:              fieldType.Name,
+			ReceiverAlias:      alias,
+			PointerNeeded:      !isPointer,
+			BaseValueFieldType: valueFieldType.Name,
+			PointerMethod:      strings.Contains(field.ValueTypeName, "*") || strings.Contains(fieldType.ValueTypeName, "*"),
+		})
+		if err != nil {
+			return false, err
+		}
+		*codings = append(*codings, code)
+		return true, nil
+	}
+
+	return false, nil
+
+}
+
 func generateMapWithSlice(sess *session, field *toolbox.FieldInfo, templateId int, alias string, codings *[]string) (bool, error) {
 	// case with ValueFieldType is nil
 	if !field.IsMap {
@@ -226,20 +319,26 @@ func generateMapWithSlice(sess *session, field *toolbox.FieldInfo, templateId in
 	}
 	keyMethod := getMapMethod(field.KeyTypeName)
 	isPointer := strings.Contains(field.ValueTypeName, "*")
+	pointerToSlice := strings.Contains(field.ValueTypeName, "[]*")
 	// no session type info for field type
-	valueFieldTypeName := strings.ReplaceAll(strings.ReplaceAll(field.ValueTypeName, "[]", ""), "*", "")
-	if err := generateStructCoding(sess, valueFieldTypeName); err != nil {
+	fieldValueTypeName := field.ValueTypeName
+	if fieldValueTypeName[0:2] == "[]" {
+		fieldValueTypeName = getOriginalType(fieldValueTypeName)
+	}
+	if err := generateStructCoding(sess, fieldValueTypeName); err != nil {
 		return false, err
 	}
 	code, err := expandFieldTemplate(templateId, templateParameters{
 		KeyMethod: keyMethod,
 		//ValueMethod: valueMethod,
-		ValueMethod:    "Coder",
-		KeyFieldType:   field.KeyTypeName,
-		ValueFieldType: field.ValueTypeName,
-		Field:          field.Name,
-		ReceiverAlias:  alias,
-		PointerNeeded:  !isPointer,
+		ValueMethod:        "Coder",
+		KeyFieldType:       field.KeyTypeName,
+		ValueFieldType:     field.ValueTypeName,
+		Field:              field.Name,
+		ReceiverAlias:      alias,
+		PointerNeeded:      !isPointer,
+		PointerMethod:      pointerToSlice,
+		BaseValueFieldType: fieldValueTypeName,
 	})
 	if err != nil {
 		return false, err
@@ -257,7 +356,7 @@ func generateMap(sess *session, field *toolbox.FieldInfo, templateId int, receiv
 	keyMethod := getMapMethod(field.KeyTypeName)
 	isPointer := strings.Contains(field.ValueTypeName, "*")
 	valueFieldType := sess.Type(field.ValueTypeName)
-	if valueFieldType != nil {
+	if valueFieldType != nil && field.ValueTypeName[0:2] != "[]" {
 		return generateBaseMapStructType(sess, field, templateId, receiverAlias, codings, valueFieldType, keyMethod, isPointer)
 	}
 	return false, nil
@@ -270,12 +369,14 @@ func generateBaseMapStructType(sess *session, field *toolbox.FieldInfo, template
 	code, err := expandFieldTemplate(templateId, templateParameters{
 		KeyMethod: keyMethod,
 		//ValueMethod: valueMethod,
-		ValueMethod:    "Coder",
-		KeyFieldType:   field.KeyTypeName,
-		ValueFieldType: field.ValueTypeName,
-		Field:          field.Name,
-		ReceiverAlias:  receiverAlias,
-		PointerNeeded:  !isPointer,
+		ValueMethod:        "Coder",
+		KeyFieldType:       field.KeyTypeName,
+		ValueFieldType:     field.ValueTypeName,
+		Field:              field.Name,
+		ReceiverAlias:      receiverAlias,
+		PointerNeeded:      !isPointer,
+		BaseValueFieldType: valueFieldType.Name,
+		PointerMethod:      strings.Contains(field.ValueTypeName, "*"),
 	})
 	if err != nil {
 		return false, err
@@ -572,4 +673,16 @@ func getMapMethod(baseType string) string {
 	}
 	return codingMethod
 
+}
+
+func getOriginalType(fieldValueTypeName string) string {
+	return strings.ReplaceAll(strings.ReplaceAll(fieldValueTypeName, "[]", ""), "*", "")
+}
+
+func isPointerToSlice(fValueTypeName string) bool {
+	return strings.Contains(fValueTypeName, "[]*")
+}
+
+func isPointer(fValueTypeName string) bool {
+	return strings.Contains(fValueTypeName, "*")
 }

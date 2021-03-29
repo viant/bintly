@@ -3,6 +3,7 @@ package codegen
 import (
 	"github.com/viant/toolbox"
 	"os"
+	"path"
 	"path/filepath"
 	"strings"
 )
@@ -38,12 +39,14 @@ func (s *session) readPackageCode() error {
 	}
 
 	if !f.IsDir() {
-		s.Pkg = filepath.Dir(p)
 		dir, _ := filepath.Split(p)
+		_, pkg := path.Split(filepath.Base(dir))
+		s.Pkg = pkg
 		s.FileSetInfo, err = toolbox.NewFileSetInfo(dir)
 
 	} else {
-		s.Pkg = filepath.Base(p)
+		_, pkg := path.Split(filepath.Base(p))
+		s.Pkg = pkg
 		s.FileSetInfo, err = toolbox.NewFileSetInfo(p)
 	}
 

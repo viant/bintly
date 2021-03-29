@@ -1,12 +1,16 @@
 package codegen
 
-import "errors"
+import (
+	"errors"
+	"fmt"
+	"strings"
+)
 
 type Options struct {
-	Source string
-	Dest   string
-	Types  []string
-	Pkg    string
+	Source string   `short:"s" long:"sourceURL" description:"source URL"`
+	Dest   string   `short:"d" long:"destinationURL" description:"destination URL"`
+	Types  []string `short:"t" long:"struct type" description:"struct type"`
+	Pkg    string   `short:"p" long:"package" description:"package"`
 }
 
 func (o *Options) Validate() error {
@@ -14,10 +18,16 @@ func (o *Options) Validate() error {
 		return errors.New("options is nil")
 	}
 	if o.Source == "" {
-		return errors.New("source was empty")
+		return errors.New("source is empty")
 	}
-	if len(o.Types) == 0 {
-		return errors.New("types was empty")
+	if o.Types == nil || len(o.Types) == 0 {
+		return errors.New("type is empty")
 	}
+	var srcPrefix = o.Dest
+	if o.Dest == "" {
+		srcPrefix = o.Source[:strings.LastIndex(o.Source, "/")]
+	}
+	o.Dest = srcPrefix + strings.Split(o.Source[strings.LastIndex(o.Source, "/"):], ".")[0] + "_enc.go"
+	fmt.Printf("dest url %v\n", o.Dest)
 	return nil
 }
