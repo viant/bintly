@@ -2,10 +2,10 @@ package codegen
 
 import (
 	"errors"
-	"fmt"
 	"strings"
 )
 
+//Options represents Cli options
 type Options struct {
 	Source string   `short:"s" long:"sourceURL" description:"source URL"`
 	Dest   string   `short:"d" long:"destinationURL" description:"destination URL"`
@@ -13,6 +13,7 @@ type Options struct {
 	Pkg    string   `short:"p" long:"package" description:"package"`
 }
 
+//Validate validates input options
 func (o *Options) Validate() error {
 	if o == nil {
 		return errors.New("options is nil")
@@ -28,6 +29,5 @@ func (o *Options) Validate() error {
 		srcPrefix = o.Source[:strings.LastIndex(o.Source, "/")]
 	}
 	o.Dest = srcPrefix + strings.Split(o.Source[strings.LastIndex(o.Source, "/"):], ".")[0] + "_enc.go"
-	fmt.Printf("dest url %v\n", o.Dest)
 	return nil
 }

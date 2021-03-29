@@ -2,15 +2,16 @@ package main
 
 import (
 	"github.com/viant/bintly/codegen/cmd"
+	"os"
 )
 
 var Version string = "1.0"
 
 func main() {
-	args := []string{
-		"main","-s=/Users/ppoudyal/go/src/github.com/viant/bintly/codegen/test_data/maps/message.go", "-d=/Users/ppoudyal/go/src/github.com/viant/bintly/codegen/test_data/maps","-t=Message",
-	}
+	//args := []string{
+	//	"main","-s=/xxx/message.go", "-d=/xxx","-t=Message",
+	//}
 
-//	args := os.Args
+	args := os.Args
 	cmd.RunClient(Version, args)
 }

@@ -8,16 +8,18 @@ import (
 	"strings"
 )
 
+//session stores generated codes, imports, pkg
 type session struct {
 	*Options
 	*toolbox.FileSetInfo
-	pkg              string
-	structCodingCode []string
-	generatedTypes   map[string]bool
-	imports          map[string]bool
+	pkg                 string
+	structCodingCode    []string
+	generatedTypes      map[string]bool
+	imports             map[string]bool
 	isBlockTemplateDone bool
 }
 
+//shallGenerateCode stores generated codes for all types
 func (s *session) shallGenerateCode(typeName string) bool {
 	if _, ok := s.generatedTypes[typeName]; ok {
 		return false
@@ -26,6 +28,7 @@ func (s *session) shallGenerateCode(typeName string) bool {
 	return true
 }
 
+//readPackageCode creates pkg code
 func (s *session) readPackageCode() error {
 	p, err := filepath.Abs(s.Source)
 	if err != nil {
@@ -58,18 +61,21 @@ func (s *session) readPackageCode() error {
 	return err
 }
 
+//addImports adds imports
+func (s *session) addImport(pkg string) {
+	s.imports[`"`+pkg+`"`] = true
+}
+
+//getImports returns imports
+func (s *session) getImports() string {
+	return "\t" + strings.Join(toolbox.MapKeysToStringSlice(s.imports), "\n\t")
+}
+
+//newSession creates a new session
 func newSession(option *Options) *session {
 	return &session{Options: option,
 		structCodingCode: make([]string, 0),
 		generatedTypes:   make(map[string]bool),
 		imports:          make(map[string]bool),
 	}
-}
-
-func (s *session) addImport(pkg string) {
-	s.imports[`"`+pkg+`"`] = true
-}
-
-func (s *session) getImports() string {
-	return "\t" + strings.Join(toolbox.MapKeysToStringSlice(s.imports), "\n\t")
 }

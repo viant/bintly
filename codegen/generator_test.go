@@ -11,7 +11,7 @@ import (
 func TestGen(t *testing.T) {
 
 	parent := path.Join(toolbox.CallerDirectory(3), "test_data")
-	os.Setenv("AST_DEBUG","1")
+	os.Setenv("AST_DEBUG","0")
 	var useCases = []struct {
 		description string
 		options     *Options

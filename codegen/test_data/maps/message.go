@@ -14,5 +14,4 @@ type Message struct {
 	//M1 map[string][]SubMessage
 	//M1 map[string][]*SubMessage
 	 M1
-
 }

@@ -5,14 +5,14 @@ type SubMessage struct {
 	Name string
 }
 
-type SubMessage2 []SubMessage
+//type SubMessage2 []SubMessage
 
 
 type Message struct {
-//	M1 []SubMessage
+	M1 []SubMessage
 //	M2 []*SubMessage
 	//M3 SubMessages
 	//M4 *SubMessages
-	SubMessage2
+//	SubMessage2
 //	SubMessages2
 }

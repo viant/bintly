@@ -175,6 +175,7 @@ func ({{.ReceiverAlias}} *{{.SliceType}}) DecodeBinary(coder *bintly.Reader) err
 `,
 }
 
+//expandTemplate replaces templates parameters with actual data
 func expandTemplate(namespace string, dictionary map[int]string, key int, data interface{}) (string, error) {
 	var id = fmt.Sprintf("%v_%v", namespace, key)
 	textTemplate, ok := dictionary[key]
@@ -190,10 +191,12 @@ func expandTemplate(namespace string, dictionary map[int]string, key int, data i
 	return writer.String(), err
 }
 
+//expandFieldTemplate replaces template fields with data
 func expandFieldTemplate(key int, data interface{}) (string, error) {
 	return expandTemplate("fieldTemplate", fieldTemplate, key, data)
 }
 
+//expandBlockTemplate replaces template block with data
 func expandBlockTemplate(key int, data interface{}) (string, error) {
 	return expandTemplate("blockTemplate", blockTemplate, key, data)
 }
