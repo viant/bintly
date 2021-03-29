@@ -1,4 +1,4 @@
-package bintly
+package main
 
 import (
 	"github.com/viant/bintly/codegen/cmd"
