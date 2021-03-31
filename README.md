@@ -251,6 +251,187 @@ func Example_Map_Unmarshal() {
 	}
 }
 ```
+###Auto Code Generation
+The package provides CLI options to generate bintly encoding/decoding to make  conversion effortless. For instance , the following command generates encode/decode for
+a type "Message" defined in the file "message.go" to produce "message_enc.go" in the same directory
+```go
+./gen -s "/Users/xxx/github.com/viant/bintly/codegen/test_data/slices/message.go" -t "Message"
+```
+Options :
+```yaml
+    -s : Source file location (required)
+    -t : Type (required)
+    -d : Destination file directory (optional - if not provided output is produced in same directory as source)
+```
+
+####Examples
+##### Basic Types
+Input : message.go
+```go
+package basic_struct
+
+type Message struct {
+	A1 int
+	B1 *string
+	C1 []string
+}
+```
+Cmd:
+```go
+gen -s "message.go" -t "Message" 
+```
+Output : message_enc.go
+```go
+package basic_struct
+
+import (
+	"github.com/viant/bintly"
+)
+func (m *Message) EncodeBinary(coder *bintly.Writer) error {
+	coder.Int(m.A1)
+	coder.StringPtr(m.B1)
+	coder.Strings(m.C1)
+	return nil
+}
+func (m *Message) DecodeBinary(coder *bintly.Reader) error {
+	coder.Int(&m.A1)
+	coder.StringPtr(&m.B1)
+	coder.Strings(&m.C1)	
+	return nil
+}
+
+```
+##### Slice Types
+Input:
+```go
+package slices
+
+type SubMessage struct {
+	Id   int
+	Name string
+}
+
+type Message struct {
+	M1 []SubMessage
+}
+```
+Output :
+
+```go
+package slices
+
+import (
+	"github.com/viant/bintly"
+)
+
+func (s *SubMessage) EncodeBinary(coder *bintly.Writer) error {
+	coder.Int(s.Id)
+	coder.String(s.Name)
+	return nil
+}
+
+func (s *SubMessage) DecodeBinary(coder *bintly.Reader) error {
+	coder.Int(&s.Id)
+	coder.String(&s.Name)	
+	return nil
+}
+
+func (m *Message) EncodeBinary(coder *bintly.Writer) error {
+	var m1 = len(m.M1)
+	coder.Alloc(int32(m1))
+	for i:=0; i < m1 ; i++ {
+		if err := coder.Coder(&m.M1[i]);err !=nil {
+			return nil
+		}
+	}
+	return nil
+}
+
+func (m *Message) DecodeBinary(coder *bintly.Reader) error {
+	var m1 = coder.Alloc()
+	m.M1 = make([]SubMessage,m1)
+	for i:=0; i < int(m1) ; i++ {
+		if err := coder.Coder(&m.M1[i]);err != nil {
+			return nil
+		}
+	}	
+	return nil
+}
+```
+##### Map Types
+Input:
+```go
+package maps
+
+type SubMessage struct {
+	Id   int
+	Name string
+}
+
+
+type M1 map[string][]*SubMessage
+
+type Message struct {
+	 M1
+}
+```
+Output :
+```go
+package maps
+
+import (
+	"github.com/viant/bintly"
+)
+
+func (s *SubMessage) EncodeBinary(coder *bintly.Writer) error {
+	coder.Int(s.Id)
+	coder.String(s.Name)
+	return nil
+}
+func (s *SubMessage) DecodeBinary(coder *bintly.Reader) error {
+	coder.Int(&s.Id)
+	coder.String(&s.Name)
+	return nil
+}
+
+func (m *Message) EncodeBinary(coder *bintly.Writer) error {
+	coder.Alloc(int32(len(m.M1)))
+	for k, v := range m.M1 {
+		coder.String(k)
+		var m1 = len(v)
+		coder.Alloc(int32(m1))
+		for i := 0; i < m1; i++ {
+			if err := coder.Coder(v[i]); err != nil {
+				return nil
+			}
+		}
+	}
+	return nil
+}
+func (m *Message) DecodeBinary(coder *bintly.Reader) error {
+	size := int(coder.Alloc())
+	if size == bintly.NilSize {
+		return nil
+	}
+	m.M1 = make(map[string][]*SubMessage, size)
+	for i := 0; i < size; i++ {
+		var k string
+		var v []*SubMessage
+		coder.String(&k)
+		var m1Size = coder.Alloc()
+		v = make([]*SubMessage, m1Size)
+		for j := 0; j < int(m1Size); j++ {
+			v[j] = &SubMessage{}
+			if err := coder.Coder(v[j]); err != nil {
+				return nil
+			}
+		}
+		m.M1[k] = v
+	}
+	return nil
+}
+
+```
 
 
 ### Bugs
