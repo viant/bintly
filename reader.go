@@ -511,6 +511,7 @@ func (r *Reader) Uint8s(vs *[]uint8) {
 func (r *Reader) MUint8s(vs *[]uint8) {
 	size := r.MAlloc()
 	if size == 0 {
+		*vs = []uint8{}
 		return
 	}
 	s := r.decUint8s[:size]
