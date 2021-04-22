@@ -7,5 +7,8 @@ func unsafeGetBytes(s string) []byte {
 }
 
 func unsafeGetString(bs []byte) string {
+	if len(bs) == 0 {
+		return ""
+	}
 	return *(*string)(unsafe.Pointer(&bs))
 }
